@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Scan, Upload, BarChart3, Users, Shield, Zap, Play, TrendingUp, FileText, Award } from "lucide-react";
 import { addModel, addDataset, addReport, incrementStat, getStats, insertDemoData } from "@/lib/localStorage";
 import { generateMockModel, generateMockDataset, generateMockReport } from "@/lib/mockData";
+import Spline from '@splinetool/react-spline';
 
 const Landing = () => {
   const { scrollYProgress } = useScroll();
@@ -82,73 +83,85 @@ const Landing = () => {
 
         {/* Hero Content */}
         <div className="container mx-auto pt-14 px-4 lg:px-8 relative z-10">
-          <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="max-w-4xl mx-auto text-center"
-          >
-          
-        {/* Logo Icon */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          className="inline-block mb-6"
-        >
-          <div className="relative">
-            <Scan className="w-20 h-20 text-primary animate-glow" />
-            <div className="absolute inset-0 blur-2xl bg-primary/40" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[70vh] pt-12">
+            {/* Left Column - Headlines and CTA */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center lg:text-left"
+            >
+              {/* Logo Icon */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="inline-block mb-6"
+              >
+                <div className="relative">
+                  <Scan className="w-20 h-20 text-primary animate-glow" />
+                  <div className="absolute inset-0 blur-2xl bg-primary/40" />
+                </div>
+              </motion.div>
+
+              {/* Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+              >
+                A lens to see the{" "}
+                <span className="text-gradient">unseen ethics</span> of AI
+              </motion.h1>
+
+              {/* Subtitle */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto lg:mx-0"
+              >
+                Crowd-sourced bias detection and fairness auditing platform.
+                Analyze AI models and datasets for ethical compliance.
+              </motion.p>
+
+              {/* CTA Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.8 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              >
+                <Link to="/upload">
+                  <Button variant="hero" size="lg">
+                    <Zap className="w-5 h-5" />
+                    Start Auditing
+                  </Button>
+                </Link>
+                <Link to="/reports">
+                  <Button variant="outline" size="lg">
+                    <BarChart3 className="w-5 h-5" />
+                    Explore Bias Reports
+                  </Button>
+                </Link>
+                <Button onClick={handleQuickDemo} variant="secondary" size="lg" className="glass-panel-hover">
+                  <Play className="w-5 h-5" />
+                  Quick Demo
+                </Button>
+              </motion.div>
+            </motion.div>
+
+            {/* Right Column - Spline 3D Model */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="relative md:pl-12 h-96 lg:h-[500px] w-full"
+            >
+              <Spline scene="https://prod.spline.design/4U5ZCKdoUeWfoByC/scene.splinecode" />
+            </motion.div>
           </div>
-        </motion.div>
-
-        {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
-        >
-          A lens to see the{" "}
-          <span className="text-gradient">unseen ethics</span> of AI
-        </motion.h1>
-
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
-        >
-          Crowd-sourced bias detection and fairness auditing platform.
-          Analyze AI models and datasets for ethical compliance.
-        </motion.p>
-
-        {/* CTA Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-        >
-          <Link to="/upload">
-            <Button variant="hero" size="lg">
-          <Zap className="w-5 h-5" />
-          Start Auditing
-            </Button>
-          </Link>
-          <Link to="/reports">
-            <Button variant="outline" size="lg">
-          <BarChart3 className="w-5 h-5" />
-          Explore Bias Reports
-            </Button>
-          </Link>
-          <Button onClick={handleQuickDemo} variant="secondary" size="lg" className="glass-panel-hover">
-            <Play className="w-5 h-5" />
-            Quick Demo
-          </Button>
-        </motion.div>
-          </motion.div>
         </div>
       </motion.section>
 
@@ -259,6 +272,10 @@ const Landing = () => {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="max-h-max py-24 relative bo rder-rounded-md">
+            <Spline scene="https://prod.spline.design/5lOJAClO4qUm5n12/scene.splinecode" />
       </section>
 
       {/* CTA Section */}
