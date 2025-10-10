@@ -66,8 +66,14 @@ const Landing = () => {
       {/* Hero Section */}
       <motion.section 
         className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
-        style={{ y, opacity }}
+        style={{ y, opacity, fontFamily: "'Roboto', sans-serif" }}
       >
+        {/* Load Roboto from Google Fonts */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+        />
+
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
@@ -77,70 +83,71 @@ const Landing = () => {
         {/* Hero Content */}
         <div className="container mx-auto pt-14 px-4 lg:px-8 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="max-w-4xl mx-auto text-center"
           >
-            {/* Logo Icon */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="inline-block mb-6"
-            >
-              <div className="relative">
-                <Scan className="w-20 h-20 text-primary animate-glow" />
-                <div className="absolute inset-0 blur-2xl bg-primary/40" />
-              </div>
-            </motion.div>
+          
+        {/* Logo Icon */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+          className="inline-block mb-6"
+        >
+          <div className="relative">
+            <Scan className="w-20 h-20 text-primary animate-glow" />
+            <div className="absolute inset-0 blur-2xl bg-primary/40" />
+          </div>
+        </motion.div>
 
-            {/* Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
-            >
-              A lens to see the{" "}
-              <span className="text-gradient">unseen ethics</span> of AI
-            </motion.h1>
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+        >
+          A lens to see the{" "}
+          <span className="text-gradient">unseen ethics</span> of AI
+        </motion.h1>
 
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
-            >
-              Crowd-sourced bias detection and fairness auditing platform.
-              Analyze AI models and datasets for ethical compliance.
-            </motion.p>
+        {/* Subtitle */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
+        >
+          Crowd-sourced bias detection and fairness auditing platform.
+          Analyze AI models and datasets for ethical compliance.
+        </motion.p>
 
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
-              <Link to="/upload">
-                <Button variant="hero" size="lg">
-                  <Zap className="w-5 h-5" />
-                  Start Auditing
-                </Button>
-              </Link>
-              <Link to="/reports">
-                <Button variant="outline" size="lg">
-                  <BarChart3 className="w-5 h-5" />
-                  Explore Bias Reports
-                </Button>
-              </Link>
-              <Button onClick={handleQuickDemo} variant="secondary" size="lg" className="glass-panel-hover">
-                <Play className="w-5 h-5" />
-                Quick Demo
-              </Button>
-            </motion.div>
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.8 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
+          <Link to="/upload">
+            <Button variant="hero" size="lg">
+          <Zap className="w-5 h-5" />
+          Start Auditing
+            </Button>
+          </Link>
+          <Link to="/reports">
+            <Button variant="outline" size="lg">
+          <BarChart3 className="w-5 h-5" />
+          Explore Bias Reports
+            </Button>
+          </Link>
+          <Button onClick={handleQuickDemo} variant="secondary" size="lg" className="glass-panel-hover">
+            <Play className="w-5 h-5" />
+            Quick Demo
+          </Button>
+        </motion.div>
           </motion.div>
         </div>
       </motion.section>

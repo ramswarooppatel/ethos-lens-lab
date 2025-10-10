@@ -3,57 +3,155 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sphere, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-interface RegionData {
-  region: string;
-  fairness: number;
-  models: number;
+interface NodeData {
+  id: string;
+  name: string;
   lat: number;
   lng: number;
+  status: 'Fair' | 'InProgress' | 'Biased';
+  score: number;
   description: string;
+  region: string;
 }
 
 interface GlobeProps {
-  onNodeClick: (region: RegionData) => void;
+  onNodeClick: (node: NodeData) => void;
+  onNodeHover: (node: NodeData | null) => void;
 }
 
-const regionalData: RegionData[] = [
-  { region: "North America", fairness: 78, models: 234, lat: 40, lng: -100, description: "Leading in fairness metrics with extensive model coverage across major tech hubs." },
-  { region: "Europe", fairness: 82, models: 189, lat: 50, lng: 10, description: "Strong regulatory frameworks driving high fairness standards in AI development." },
-  { region: "Asia Pacific", fairness: 71, models: 312, lat: 20, lng: 120, description: "Rapid AI adoption with growing focus on ethical AI practices and fairness." },
-  { region: "Latin America", fairness: 69, models: 87, lat: -15, lng: -60, description: "Emerging AI landscape with increasing attention to bias mitigation." },
-  { region: "Middle East & Africa", fairness: 74, models: 56, lat: 10, lng: 20, description: "Developing AI ecosystems with focus on cultural context and fairness." },
+const nodeData: NodeData[] = [
+  {
+    id: "US001",
+    name: "New York",
+    lat: 40.7128,
+    lng: -74.0060,
+    status: "Fair",
+    score: 85,
+    description: "Leading AI fairness research hub with extensive model auditing capabilities.",
+    region: "North America"
+  },
+  {
+    id: "GB001",
+    name: "London",
+    lat: 51.5074,
+    lng: -0.1278,
+    status: "Fair",
+    score: 88,
+    description: "European center for AI ethics and regulatory compliance frameworks.",
+    region: "Europe"
+  },
+  {
+    id: "JP001",
+    name: "Tokyo",
+    lat: 35.6762,
+    lng: 139.6503,
+    status: "InProgress",
+    score: 72,
+    description: "Rapid AI adoption with ongoing fairness assessments for Asian markets.",
+    region: "Asia Pacific"
+  },
+  {
+    id: "IN001",
+    name: "Chennai",
+    lat: 13.0827,
+    lng: 80.2707,
+    status: "Fair",
+    score: 92,
+    description: "Analyzing AI bias in language models trained on diverse Indian data.",
+    region: "Asia Pacific"
+  },
+  {
+    id: "DE001",
+    name: "Berlin",
+    lat: 52.5200,
+    lng: 13.4050,
+    status: "Fair",
+    score: 90,
+    description: "GDPR-compliant AI auditing and fairness testing center.",
+    region: "Europe"
+  },
+  {
+    id: "KE001",
+    name: "Nairobi",
+    lat: -1.2921,
+    lng: 36.8219,
+    status: "Biased",
+    score: 65,
+    description: "Emerging AI hub focusing on African data representation and bias mitigation.",
+    region: "Africa"
+  },
+  {
+    id: "BR001",
+    name: "São Paulo",
+    lat: -23.5505,
+    lng: -46.6333,
+    status: "InProgress",
+    score: 68,
+    description: "Latin American AI development with growing fairness awareness.",
+    region: "Latin America"
+  },
+  {
+    id: "AU001",
+    name: "Sydney",
+    lat: -33.8688,
+    lng: 151.2093,
+    status: "Fair",
+    score: 86,
+    description: "Pacific region AI ethics and fairness research center.",
+    region: "Asia Pacific"
+  }
 ];
 
-function Node({ position, region, onClick, isHovered }: {
+const getNodeColor = (status: string) => {
+  switch (status) {
+    case 'Fair': return '#10b981'; // Green
+    case 'InProgress': return '#f59e0b'; // Orange
+    case 'Biased': return '#ef4444'; // Red
+    default: return '#6b7280'; // Gray
+  }
+};
+
+function Node({ position, node, onClick, isHovered }: {
   position: [number, number, number];
-  region: RegionData;
-  onClick: (region: RegionData) => void;
+  node: NodeData;
+  onClick: (node: NodeData) => void;
   isHovered: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime) * 0.1;
-      meshRef.current.rotation.y = Math.cos(state.clock.elapsedTime) * 0.1;
+      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime + position[0]) * 0.2;
+      meshRef.current.rotation.y = Math.cos(state.clock.elapsedTime + position[1]) * 0.2;
     }
   });
 
-  const color = region.fairness >= 80 ? '#10b981' : region.fairness >= 75 ? '#f59e0b' : '#ef4444';
+  const color = getNodeColor(node.status);
 
   return (
     <group position={position}>
-      <Sphere ref={meshRef} args={[0.02, 16, 16]}>
+      <Sphere ref={meshRef} args={[0.015, 16, 16]}>
         <meshStandardMaterial
           color={isHovered ? '#ffffff' : color}
           emissive={isHovered ? color : '#000000'}
-          emissiveIntensity={isHovered ? 0.3 : 0}
+          emissiveIntensity={isHovered ? 0.4 : 0.1}
+        />
+      </Sphere>
+      {/* Pulsing ring effect */}
+      <Sphere args={[0.02, 16, 16]}>
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={isHovered ? 0.3 : 0.1}
+          wireframe
         />
       </Sphere>
       {isHovered && (
-        <Html distanceFactor={10}>
-          <div className="bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap">
-            {region.region}: {region.fairness}%
+        <Html distanceFactor={8}>
+          <div className="bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-lg border border-cyan-500/30 text-sm whitespace-nowrap">
+            <div className="font-semibold">{node.name}</div>
+            <div className="text-cyan-300">Fairness: {node.score}%</div>
+            <div className="text-xs text-gray-400">{node.region}</div>
           </div>
         </Html>
       )}
@@ -61,41 +159,63 @@ function Node({ position, region, onClick, isHovered }: {
   );
 }
 
-function Connections({ regions }: { regions: RegionData[] }) {
-  const lines = useMemo(() => {
+function Arc({ start, end, color }: { start: [number, number, number]; end: [number, number, number]; color: string }) {
+  const points = useMemo(() => {
+    const curve = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(...start),
+      new THREE.Vector3(
+        (start[0] + end[0]) / 2,
+        (start[1] + end[1]) / 2 + 0.3,
+        (start[2] + end[2]) / 2
+      ),
+      new THREE.Vector3(...end)
+    );
+    return curve.getPoints(50);
+  }, [start, end]);
+
+  return (
+    <line>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={points.length}
+          array={new Float32Array(points.flatMap(p => [p.x, p.y, p.z]))}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <lineBasicMaterial color={color} opacity={0.6} transparent />
+    </line>
+  );
+}
+
+function Connections({ nodes }: { nodes: NodeData[] }) {
+  const arcs = useMemo(() => {
     const connections: JSX.Element[] = [];
+    const fairNodes = nodes.filter(node => node.status === 'Fair');
 
-    // Connect regions with fairness scores above 75
-    const highFairnessRegions = regions.filter(r => r.fairness >= 75);
+    for (let i = 0; i < fairNodes.length; i++) {
+      for (let j = i + 1; j < fairNodes.length; j++) {
+        const node1 = fairNodes[i];
+        const node2 = fairNodes[j];
 
-    for (let i = 0; i < highFairnessRegions.length; i++) {
-      for (let j = i + 1; j < highFairnessRegions.length; j++) {
-        const region1 = highFairnessRegions[i];
-        const region2 = highFairnessRegions[j];
-
-        const pos1 = latLngToVector3(region1.lat, region1.lng, 1.01);
-        const pos2 = latLngToVector3(region2.lat, region2.lng, 1.01);
+        const pos1 = latLngToVector3(node1.lat, node1.lng, 1.02);
+        const pos2 = latLngToVector3(node2.lat, node2.lng, 1.02);
 
         connections.push(
-          <line key={`${i}-${j}`}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([...pos1, ...pos2])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color="#10b981" opacity={0.3} transparent />
-          </line>
+          <Arc
+            key={`${node1.id}-${node2.id}`}
+            start={pos1}
+            end={pos2}
+            color="#10b981"
+          />
         );
       }
     }
 
     return connections;
-  }, [regions]);
+  }, [nodes]);
 
-  return <>{lines}</>;
+  return <>{arcs}</>;
 }
 
 function latLngToVector3(lat: number, lng: number, radius: number = 1): [number, number, number] {
@@ -109,18 +229,18 @@ function latLngToVector3(lat: number, lng: number, radius: number = 1): [number,
   return [x, y, z];
 }
 
-function GlobeScene({ onNodeClick }: GlobeProps) {
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+function GlobeScene({ onNodeClick, onNodeHover }: GlobeProps) {
+  const [hoveredNode, setHoveredNode] = useState<NodeData | null>(null);
 
-  const nodes = regionalData.map((region) => {
-    const position = latLngToVector3(region.lat, region.lng, 1.02);
-    const isHovered = hoveredNode === region.region;
+  const nodes = nodeData.map((node) => {
+    const position = latLngToVector3(node.lat, node.lng, 1.03);
+    const isHovered = hoveredNode?.id === node.id;
 
     return (
       <Node
-        key={region.region}
+        key={node.id}
         position={position}
-        region={region}
+        node={node}
         onClick={onNodeClick}
         isHovered={isHovered}
       />
@@ -129,45 +249,80 @@ function GlobeScene({ onNodeClick }: GlobeProps) {
 
   return (
     <>
-      <ambientLight intensity={0.4} />
-      <pointLight position={[10, 10, 10]} />
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={0.8} />
+      <pointLight position={[-10, -10, -10]} intensity={0.3} />
+
+      {/* Earth sphere with dark theme */}
       <Sphere args={[1, 64, 64]}>
-        <meshStandardMaterial
+        <meshPhongMaterial
           color="#1a1a2e"
-          wireframe
-          opacity={0.1}
           transparent
+          opacity={0.9}
+          shininess={0.1}
         />
       </Sphere>
-      <Connections regions={regionalData} />
+
+      {/* Atmosphere effect */}
+      <Sphere args={[1.05, 32, 32]}>
+        <meshBasicMaterial
+          color="#4c1d95"
+          transparent
+          opacity={0.1}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+
+      <Connections nodes={nodeData} />
+
       {nodes.map((node, index) => (
         <group
-          key={regionalData[index].region}
-          onPointerOver={() => setHoveredNode(regionalData[index].region)}
-          onPointerOut={() => setHoveredNode(null)}
-          onClick={() => onNodeClick(regionalData[index])}
+          key={nodeData[index].id}
+          onPointerOver={() => {
+            setHoveredNode(nodeData[index]);
+            onNodeHover(nodeData[index]);
+          }}
+          onPointerOut={() => {
+            setHoveredNode(null);
+            onNodeHover(null);
+          }}
+          onClick={() => onNodeClick(nodeData[index])}
         >
           {node}
         </group>
       ))}
+
       <OrbitControls
         enablePan={false}
         enableZoom={true}
         minDistance={1.5}
         maxDistance={4}
         autoRotate
-        autoRotateSpeed={0.5}
+        autoRotateSpeed={0.3}
+        enableDamping
+        dampingFactor={0.05}
       />
     </>
   );
 }
 
-export default function Globe({ onNodeClick }: GlobeProps) {
+export default function InteractiveGlobe({ onNodeClick, onNodeHover }: GlobeProps) {
   return (
-    <div className="w-full h-96 rounded-2xl overflow-hidden">
-      <Canvas camera={{ position: [0, 0, 2.5], fov: 60 }}>
-        <GlobeScene onNodeClick={onNodeClick} />
+    <div className="relative w-full h-96 rounded-2xl overflow-hidden bg-gradient-to-b from-slate-900 via-purple-900/20 to-slate-900">
+      <Canvas
+        camera={{ position: [0, 0, 2.5], fov: 60 }}
+        gl={{ antialias: true, alpha: true }}
+      >
+        <GlobeScene onNodeClick={onNodeClick} onNodeHover={onNodeHover} />
       </Canvas>
+
+      {/* Overlay effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="w-full h-full bg-gradient-to-t from-purple-900/20 via-transparent to-cyan-900/10" />
+        <div className="absolute top-4 right-4 text-cyan-300 text-sm font-mono">
+          ETHOLENS AI FAIRNESS NETWORK
+        </div>
+      </div>
     </div>
   );
 }

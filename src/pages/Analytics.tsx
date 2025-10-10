@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import InteractiveGlobe from "@/components/Globe";
 
 interface RegionData {
   region: string;
@@ -20,6 +21,17 @@ interface RegionData {
   description: string;
 }
 
+interface NodeData {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  status: 'Fair' | 'InProgress' | 'Biased';
+  score: number;
+  description: string;
+  region: string;
+}
+
 const Analytics = () => {
   const { toast } = useToast();
   const [globalScore, setGlobalScore] = useState(75);
@@ -27,7 +39,7 @@ const Analytics = () => {
   const [selectedModel, setSelectedModel] = useState("all");
   const [selectedDataset, setSelectedDataset] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
-  const [selectedGlobeRegion, setSelectedGlobeRegion] = useState<RegionData | null>(null);
+  const [selectedGlobeRegion, setSelectedGlobeRegion] = useState<NodeData | null>(null);
 
   const regionalData = [
     { region: "North America", fairness: 78, models: 234 },
@@ -64,6 +76,24 @@ const Analytics = () => {
       title: "Exporting Analytics",
       description: "Global analytics report is being prepared for download.",
     });
+  };
+
+  const getStatusBadge = (score: number) => {
+    if (score >= 80) return 'bg-green-100 text-green-800';
+    if (score >= 75) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  const getFairnessLevel = (score: number) => {
+    if (score >= 75) return 'High';
+    if (score >= 70) return 'Medium';
+    return 'Low';
+  };
+
+  const getTrend = (currentScore: number, prevScore: number) => {
+    if (currentScore > prevScore) return "up";
+    if (currentScore < prevScore) return "down";
+    return "same";
   };
 
   return (
@@ -199,7 +229,7 @@ const Analytics = () => {
               <div className="space-y-4">
                 {trendData.map((data, index) => {
                   const prevScore = index > 0 ? trendData[index - 1].score : data.score;
-                  const trend = data.score > prevScore ? "up" : data.score < prevScore ? "down" : "same";
+                  const trend = getTrend(data.score, prevScore);
                   return (
                     <div key={data.month} className="flex items-center gap-4">
                       <div className="w-12 text-sm text-muted-foreground">{data.month}</div>
@@ -264,36 +294,7 @@ const Analytics = () => {
               3D Fairness Globe
             </h2>
             <div className="mb-6">
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() =>
-                  setSelectedGlobeRegion({
-                    region: "North America",
-                    fairness: 78,
-                    models: 234,
-                    lat: 37.0902,
-                    lng: -95.7129,
-                    description: "Demo selection: North America region details.",
-                  })
-                }
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setSelectedGlobeRegion({
-                      region: "North America",
-                      fairness: 78,
-                      models: 234,
-                      lat: 37.0902,
-                      lng: -95.7129,
-                      description: "Demo selection: North America region details.",
-                    });
-                  }
-                }}
-                className="inline-flex items-center gap-3 cursor-pointer"
-              >
-                <Globe className="w-12 h-12 text-primary" />
-                <span className="text-sm text-muted-foreground">Click globe to inspect regions</span>
-              </div>
+              <InteractiveGlobe onNodeClick={setSelectedGlobeRegion} onNodeHover={() => {}} />
             </div>
 
             {/* Region Details Panel */}
@@ -304,34 +305,30 @@ const Analytics = () => {
                 className="glass-panel p-6 rounded-xl border border-primary/20"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold">{selectedGlobeRegion.region}</h3>
+                  <h3 className="text-xl font-bold">{selectedGlobeRegion.name}</h3>
                   <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      selectedGlobeRegion.fairness >= 80 ? 'bg-green-100 text-green-800' :
-                      selectedGlobeRegion.fairness >= 75 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {selectedGlobeRegion.fairness}% Fairness
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(selectedGlobeRegion.score)}`}>
+                      {selectedGlobeRegion.score}% Fairness
                     </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{selectedGlobeRegion.models}</div>
-                    <div className="text-sm text-muted-foreground">Models Analyzed</div>
+                    <div className="text-2xl font-bold text-primary">{selectedGlobeRegion.id}</div>
+                    <div className="text-sm text-muted-foreground">Node ID</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-accent">
-                      {selectedGlobeRegion.fairness >= 75 ? 'High' : selectedGlobeRegion.fairness >= 70 ? 'Medium' : 'Low'}
+                      {getFairnessLevel(selectedGlobeRegion.score)}
                     </div>
                     <div className="text-sm text-muted-foreground">Fairness Level</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {((selectedGlobeRegion.models / 878) * 100).toFixed(1)}%
+                      {selectedGlobeRegion.status}
                     </div>
-                    <div className="text-sm text-muted-foreground">Global Share</div>
+                    <div className="text-sm text-muted-foreground">Status</div>
                   </div>
                 </div>
 
@@ -356,7 +353,7 @@ const Analytics = () => {
             transition={{ delay: 0.6, duration: 0.6 }}
             className="flex justify-center mt-8"
           >
-            <Button variant="hero" size="lg">
+            <Button variant="hero" size="lg" onClick={exportReport}>
               Export Analytics Report
             </Button>
           </motion.div>
