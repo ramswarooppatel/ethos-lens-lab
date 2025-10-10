@@ -1,0 +1,225 @@
+import { motion } from "framer-motion";
+import { User, Award, TrendingUp, Settings, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+
+const Profile = () => {
+  const userStats = [
+    { label: "Models Audited", value: 23 },
+    { label: "Community Posts", value: 15 },
+    { label: "Reports Generated", value: 31 },
+    { label: "Upvotes Received", value: 342 },
+  ];
+
+  const achievements = [
+    { name: "First Audit", description: "Completed your first model audit", unlocked: true },
+    { name: "Community Hero", description: "Received 100+ upvotes", unlocked: true },
+    { name: "Expert Reviewer", description: "Verified by the community", unlocked: true },
+    { name: "Bias Hunter", description: "Detected 10+ critical biases", unlocked: false },
+  ];
+
+  return (
+    <div className="min-h-screen pt-24 pb-12">
+      <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          {/* Profile Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="glass-panel p-8 rounded-2xl mb-8"
+          >
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              <Avatar className="w-24 h-24 border-4 border-primary/20">
+                <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
+                  SC
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-3xl font-bold mb-2">Sarah Chen</h1>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3">
+                  <Badge className="bg-primary/20 text-primary border-primary/30">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Verified Expert
+                  </Badge>
+                  <Badge className="bg-accent/20 text-accent border-accent/30">
+                    <Award className="w-3 h-3 mr-1" />
+                    Top Contributor
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground mb-4">
+                  AI Ethics Researcher | Specializing in fairness metrics and bias detection
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between max-w-md mx-auto md:mx-0">
+                    <span className="text-sm text-muted-foreground">Trust Score</span>
+                    <span className="font-bold text-primary">95/100</span>
+                  </div>
+                  <Progress value={95} className="h-2 max-w-md mx-auto md:mx-0" />
+                </div>
+              </div>
+              <Button variant="outline">
+                <Settings className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+            </div>
+          </motion.div>
+
+          {/* Stats Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          >
+            {userStats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+                className="glass-panel-hover p-6 rounded-2xl text-center"
+              >
+                <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Achievements */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="glass-panel p-8 rounded-2xl"
+            >
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <Award className="w-6 h-6 text-accent" />
+                Achievements
+              </h2>
+              <div className="space-y-4">
+                {achievements.map((achievement) => (
+                  <div
+                    key={achievement.name}
+                    className={`p-4 rounded-xl border ${
+                      achievement.unlocked
+                        ? "bg-primary/10 border-primary/30"
+                        : "bg-foreground/5 border-foreground/10 opacity-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          achievement.unlocked ? "bg-primary/20" : "bg-foreground/10"
+                        }`}
+                      >
+                        <Award
+                          className={`w-5 h-5 ${
+                            achievement.unlocked ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{achievement.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {achievement.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Settings */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="glass-panel p-8 rounded-2xl"
+            >
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <Settings className="w-6 h-6 text-primary" />
+                Preferences
+              </h2>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="notifications" className="text-base font-medium">
+                      Email Notifications
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive updates on your audits
+                    </p>
+                  </div>
+                  <Switch id="notifications" defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="community" className="text-base font-medium">
+                      Community Posts
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified of new discussions
+                    </p>
+                  </div>
+                  <Switch id="community" defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="analytics" className="text-base font-medium">
+                      Analytics Insights
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Weekly fairness trend reports
+                    </p>
+                  </div>
+                  <Switch id="analytics" />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="public-profile" className="text-base font-medium">
+                      Public Profile
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show your profile to the community
+                    </p>
+                  </div>
+                  <Switch id="public-profile" defaultChecked />
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-foreground/10">
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-accent" />
+                  Reputation Level
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Progress to Expert</span>
+                    <span className="font-semibold">2,847 / 3,000 XP</span>
+                  </div>
+                  <Progress value={94.9} className="h-2" />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;
