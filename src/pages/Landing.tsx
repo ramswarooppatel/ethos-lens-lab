@@ -1,9 +1,22 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Scan, Upload, BarChart3, Users, Shield, Zap } from "lucide-react";
+import { Scan, Upload, BarChart3, Users, Shield, Zap, Play, TrendingUp, FileText, Award } from "lucide-react";
+import { addModel, addDataset, addReport, incrementStat, getStats, insertDemoData } from "@/lib/localStorage";
+import { generateMockModel, generateMockDataset, generateMockReport } from "@/lib/mockData";
 
 const Landing = () => {
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  const stats = getStats();
+
+  const handleQuickDemo = () => {
+    insertDemoData();
+    // Could add a toast or redirect, but for now just insert data
+  };
+
   const features = [
     {
       icon: Upload,
@@ -28,17 +41,41 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Circuit Background */}
+      <div className="absolute inset-0 z-0">
+        <svg className="w-full h-full" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(0, 224, 198, 0.1)" />
+              <stop offset="100%" stopColor="rgba(155, 158, 245, 0.1)" />
+            </linearGradient>
+          </defs>
+          {/* Circuit lines */}
+          <path d="M0 400 L200 400 L200 200 L400 200" stroke="url(#circuitGradient)" strokeWidth="2" fill="none" className="animate-pulse">
+            <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="3s" repeatCount="indefinite" />
+          </path>
+          <path d="M800 600 L1000 600 L1000 400 L1200 400" stroke="url(#circuitGradient)" strokeWidth="2" fill="none" className="animate-pulse">
+            <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="4s" repeatCount="indefinite" />
+          </path>
+          <circle cx="200" cy="200" r="4" fill="rgba(0, 224, 198, 0.6)" className="animate-ping" />
+          <circle cx="1000" cy="400" r="4" fill="rgba(155, 158, 245, 0.6)" className="animate-ping" />
+        </svg>
+      </div>
+
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <motion.section 
+        className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
+        style={{ y, opacity }}
+      >
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float animation-delay-2000" />
         </div>
 
         {/* Hero Content */}
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+        <div className="container mx-auto pt-14 px-4 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -99,8 +136,82 @@ const Landing = () => {
                   Explore Bias Reports
                 </Button>
               </Link>
+              <Button onClick={handleQuickDemo} variant="secondary" size="lg" className="glass-panel-hover">
+                <Play className="w-5 h-5" />
+                Quick Demo
+              </Button>
             </motion.div>
           </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Stats Section */}
+      <section className="py-16 relative">
+        <div className="container mx-auto px-4 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Platform <span className="text-gradient">Impact</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Real-time statistics from our community-driven AI ethics observatory
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="glass-panel p-6 rounded-2xl text-center"
+            >
+              <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-primary">{stats.modelsAudited}</div>
+              <div className="text-sm text-muted-foreground">Models Audited</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="glass-panel p-6 rounded-2xl text-center"
+            >
+              <FileText className="w-8 h-8 text-accent mx-auto mb-2" />
+              <div className="text-2xl font-bold text-accent">{stats.reportsGenerated}</div>
+              <div className="text-sm text-muted-foreground">Reports Generated</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="glass-panel p-6 rounded-2xl text-center"
+            >
+              <Users className="w-8 h-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-primary">{stats.communityPosts}</div>
+              <div className="text-sm text-muted-foreground">Community Posts</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="glass-panel p-6 rounded-2xl text-center"
+            >
+              <Award className="w-8 h-8 text-accent mx-auto mb-2" />
+              <div className="text-2xl font-bold text-accent">{Math.round(stats.averageFairnessScore)}%</div>
+              <div className="text-sm text-muted-foreground">Avg Fairness Score</div>
+            </motion.div>
+          </div>
         </div>
       </section>
 

@@ -186,7 +186,147 @@ export const incrementStat = (stat: keyof UserProfile['stats'], amount: number =
   setItem(STORAGE_KEYS.PROFILE, profile);
 };
 
+// Get aggregated stats for dashboard
+export const getStats = () => {
+  const models = getModels();
+  const datasets = getDatasets();
+  const reports = getReports();
+  const posts = getPosts();
+  const profile = getProfile();
+
+  return {
+    modelsAudited: models.length,
+    datasetsUploaded: datasets.length,
+    reportsGenerated: reports.length,
+    communityPosts: posts.length,
+    totalUpvotes: posts.reduce((sum, post) => sum + post.upvotes, 0),
+    averageFairnessScore: models.length > 0 ? models.reduce((sum, model) => sum + model.fairnessScore, 0) / models.length : 0,
+    userStats: profile.stats,
+  };
+};
+
 // Clear all data (for demo purposes)
 export const clearAllData = (): void => {
   Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+};
+
+// Insert demo data for simulation
+export const insertDemoData = (): void => {
+  // Clear existing data
+  clearAllData();
+
+  // Add demo models
+  const demoModels: Model[] = [
+    {
+      id: 'demo-model-1',
+      name: 'Healthcare Classifier v2.1',
+      type: 'classification',
+      tags: ['healthcare', 'diagnostic', 'computer-vision'],
+      description: 'Advanced medical image classification model trained on diverse patient demographics.',
+      uploadDate: new Date().toISOString(),
+      fairnessScore: 87,
+      status: 'complete',
+    },
+    {
+      id: 'demo-model-2',
+      name: 'Credit Risk Predictor',
+      type: 'regression',
+      tags: ['finance', 'risk-assessment', 'fairness'],
+      description: 'Machine learning model for credit scoring with bias mitigation techniques.',
+      uploadDate: new Date().toISOString(),
+      fairnessScore: 92,
+      status: 'complete',
+    },
+  ];
+
+  demoModels.forEach(model => addModel(model));
+
+  // Add demo datasets
+  const demoDatasets: Dataset[] = [
+    {
+      id: 'demo-dataset-1',
+      name: 'Healthcare Patient Records 2024',
+      type: 'structured',
+      tags: ['healthcare', 'demographics', 'anonymized'],
+      description: 'Comprehensive patient records with demographic information for bias analysis.',
+      uploadDate: new Date().toISOString(),
+      sampleCount: 50000,
+    },
+    {
+      id: 'demo-dataset-2',
+      name: 'Financial Transaction Data',
+      type: 'time-series',
+      tags: ['finance', 'transactions', 'behavioral'],
+      description: 'Historical financial transaction data for fraud detection model training.',
+      uploadDate: new Date().toISOString(),
+      sampleCount: 100000,
+    },
+  ];
+
+  demoDatasets.forEach(dataset => addDataset(dataset));
+
+  // Add demo reports
+  const demoReports: AuditReport[] = [
+    {
+      id: 'demo-report-1',
+      modelId: 'demo-model-1',
+      modelName: 'Healthcare Classifier v2.1',
+      generatedDate: new Date().toISOString(),
+      fairnessScore: 87,
+      demographicParity: 0.85,
+      equalOpportunity: 0.82,
+      predictiveEquality: 0.88,
+      biasMetrics: [
+        { category: 'Gender', bias: 0.12, trend: 'down' },
+        { category: 'Age', bias: 0.08, trend: 'down' },
+        { category: 'Ethnicity', bias: 0.15, trend: 'up' },
+      ],
+      recommendations: [
+        'Consider additional training data for underrepresented ethnic groups',
+        'Implement fairness constraints during model training',
+        'Regular bias monitoring and retraining schedule',
+      ],
+    },
+  ];
+
+  demoReports.forEach(report => addReport(report));
+
+  // Add demo posts
+  const demoPosts: CommunityPost[] = [
+    {
+      id: 'demo-post-1',
+      author: 'Dr. Maria Rodriguez',
+      role: 'AI Ethics Researcher',
+      trustScore: 98,
+      title: 'Bias in Healthcare AI: A Critical Analysis',
+      summary: 'Recent studies show healthcare AI models exhibit significant bias against minority groups. We need standardized fairness metrics.',
+      upvotes: 45,
+      downvotes: 2,
+      comments: 12,
+      badge: 'expert',
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: 'demo-post-2',
+      author: 'Alex Thompson',
+      role: 'Machine Learning Engineer',
+      trustScore: 87,
+      title: 'Implementing Fairness Constraints in PyTorch',
+      summary: 'Sharing practical techniques for adding fairness constraints to deep learning models during training.',
+      upvotes: 32,
+      downvotes: 1,
+      comments: 8,
+      badge: 'contributor',
+      timestamp: new Date().toISOString(),
+    },
+  ];
+
+  demoPosts.forEach(post => addPost(post));
+
+  // Update profile stats
+  const profile = getProfile();
+  profile.stats.modelsAudited = demoModels.length;
+  profile.stats.reportsGenerated = demoReports.length;
+  profile.stats.communityPosts = demoPosts.length;
+  setItem(STORAGE_KEYS.PROFILE, profile);
 };

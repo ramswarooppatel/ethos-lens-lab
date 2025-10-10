@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Upload as UploadIcon, FileCode, Database, Loader2, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
+import { Upload as UploadIcon, FileCode, Database, Loader2, CheckCircle2, Sparkles, ArrowRight, X, FileText, Layers, Eye, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,11 @@ import { generateMockModel, generateMockDataset, generateMockReport } from "@/li
 const Upload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [batchFiles, setBatchFiles] = useState<File[]>([]);
+  const [metadataPreview, setMetadataPreview] = useState<{ size: number; type: string; lastModified: string; features?: string[] } | null>(null);
+  const [analyzingMetadata, setAnalyzingMetadata] = useState(false);
   const [modelName, setModelName] = useState('');
   const [modelTags, setModelTags] = useState('');
   const [modelDescription, setModelDescription] = useState('');
@@ -30,46 +35,85 @@ const Upload = () => {
     // Simulate upload process
     setTimeout(() => {
       if (type === 'model') {
-        const model = generateMockModel();
-        model.name = modelName || model.name;
-        model.tags = modelTags ? modelTags.split(',').map(t => t.trim()) : model.tags;
-        model.description = modelDescription || model.description;
-        
-        addModel(model);
-        const report = generateMockReport(model.id, model.name);
-        addReport(report);
-        incrementStat('modelsAudited');
-        incrementStat('reportsGenerated');
+        // Handle single file
+        if (selectedFile) {
+          const model = generateMockModel();
+          model.name = modelName || model.name;
+          model.tags = modelTags ? modelTags.split(',').map(t => t.trim()) : model.tags;
+          model.description = modelDescription || model.description;
+          
+          addModel(model);
+          const report = generateMockReport(model.id, model.name);
+          addReport(report);
+          incrementStat('modelsAudited');
+          incrementStat('reportsGenerated');
+        }
+
+        // Handle batch files
+        batchFiles.forEach((file, index) => {
+          setTimeout(() => {
+            const model = generateMockModel();
+            model.name = `${file.name.split('.')[0]} Model`;
+            model.tags = ['batch-upload', 'auto-generated'];
+            model.description = `Batch uploaded model from ${file.name}`;
+            
+            addModel(model);
+            const report = generateMockReport(model.id, model.name);
+            addReport(report);
+            incrementStat('modelsAudited');
+            incrementStat('reportsGenerated');
+          }, index * 500); // Stagger uploads
+        });
 
         setUploading(false);
         setUploadComplete(true);
         
         toast({
           title: "Upload Successful",
-          description: "Your model has been uploaded and analyzed. Redirecting to dashboard...",
+          description: `Your model${batchFiles.length > 0 ? 's' : ''} have been uploaded and analyzed. Redirecting to dashboard...`,
         });
 
         setTimeout(() => {
           navigate('/dashboard');
         }, 1500);
       } else {
-        const dataset = generateMockDataset();
-        dataset.name = datasetName || dataset.name;
-        dataset.tags = datasetTags ? datasetTags.split(',').map(t => t.trim()) : dataset.tags;
-        dataset.description = datasetDescription || dataset.description;
-        
-        addDataset(dataset);
-        
+        // Handle single dataset
+        if (selectedFile) {
+          const dataset = generateMockDataset();
+          dataset.name = datasetName || dataset.name;
+          dataset.tags = datasetTags ? datasetTags.split(',').map(t => t.trim()) : dataset.tags;
+          dataset.description = datasetDescription || dataset.description;
+          
+          addDataset(dataset);
+        }
+
+        // Handle batch datasets
+        batchFiles.forEach((file, index) => {
+          setTimeout(() => {
+            const dataset = generateMockDataset();
+            dataset.name = `${file.name.split('.')[0]} Dataset`;
+            dataset.tags = ['batch-upload', 'auto-generated'];
+            dataset.description = `Batch uploaded dataset from ${file.name}`;
+            
+            addDataset(dataset);
+          }, index * 500);
+        });
+
         setUploading(false);
         setUploadComplete(true);
         
         toast({
           title: "Upload Successful",
-          description: "Your dataset has been uploaded and is ready for analysis.",
+          description: `Your dataset${batchFiles.length > 0 ? 's' : ''} have been uploaded and are ready for analysis.`,
         });
 
         setTimeout(() => setUploadComplete(false), 3000);
       }
+
+      // Clear batch files after upload
+      setBatchFiles([]);
+      setSelectedFile(null);
+      setMetadataPreview(null);
     }, 2000);
   };
 
@@ -83,6 +127,77 @@ const Upload = () => {
     setDatasetName('Healthcare Patient Records 2024');
     setDatasetTags('demographics, medical, structured');
     setDatasetDescription('Anonymized patient records with demographic information including age, gender, location, and medical history.');
+  };
+
+  // File handlers for displaying uploaded file name and clearing it
+  const handleFileChange = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const file = fileList[0];
+    setSelectedFile(file);
+    extractMetadata(file);
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setMetadataPreview(null);
+  };
+
+  // Simulate metadata extraction
+  const extractMetadata = async (file: File) => {
+    setAnalyzingMetadata(true);
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const mockFeatures = file.name.includes('model') 
+      ? ['Neural Network', 'Classification', 'Computer Vision', 'Healthcare']
+      : ['Structured Data', 'Demographics', 'Medical Records', 'Anonymized'];
+    
+    setMetadataPreview({
+      size: file.size,
+      type: file.type || 'application/octet-stream',
+      lastModified: new Date(file.lastModified).toLocaleDateString(),
+      features: mockFeatures,
+    });
+    setAnalyzingMetadata(false);
+  };
+
+  // Batch file handling
+  const handleBatchFiles = (files: FileList) => {
+    const fileArray = Array.from(files);
+    setBatchFiles(prev => [...prev, ...fileArray]);
+  };
+
+  const removeBatchFile = (index: number) => {
+    setBatchFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Direct data insertion
+  const insertSampleModel = () => {
+    const model = generateMockModel();
+    model.name = 'Sample Healthcare Classifier';
+    model.tags = ['healthcare', 'classification', 'demo'];
+    model.description = 'Sample model for demonstration purposes.';
+    addModel(model);
+    const report = generateMockReport(model.id, model.name);
+    addReport(report);
+    incrementStat('modelsAudited');
+    incrementStat('reportsGenerated');
+    toast({
+      title: "Sample Model Added",
+      description: "A sample model has been added to your dashboard.",
+    });
+  };
+
+  const insertSampleDataset = () => {
+    const dataset = generateMockDataset();
+    dataset.name = 'Sample Healthcare Dataset';
+    dataset.tags = ['healthcare', 'demographics', 'demo'];
+    dataset.description = 'Sample dataset for demonstration purposes.';
+    addDataset(dataset);
+    toast({
+      title: "Sample Dataset Added",
+      description: "A sample dataset has been added to your uploads.",
+    });
   };
 
   return (
@@ -140,24 +255,143 @@ const Upload = () => {
                         <p className="text-sm text-muted-foreground">or click to browse</p>
                         <input
                           type="file"
+                          title="Choose model file"
+                          aria-label="Choose model file"
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           accept=".h5,.pkl,.pt,.onnx"
+                          onChange={(e) => handleFileChange(e.target.files)}
                         />
                       </>
                     )}
                   </div>
+                  {/* Show selected file name below the dropzone */}
+                  {selectedFile && (
+                    <div className="mt-4 flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-4 py-2 rounded-full max-w-md mx-auto">
+                      <div className="flex items-center gap-3">
+                        <FileCode className="w-4 h-4 text-primary" />
+                        <div className="text-sm text-foreground max-w-[220px] truncate">{selectedFile.name}</div>
+                      </div>
+                      <button type="button" onClick={clearSelectedFile} className="text-muted-foreground hover:text-foreground flex items-center gap-2">
+                        <X className="w-4 h-4" />
+                        <span className="sr-only">Clear selected file</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Demo Button */}
-                <Button 
-                  onClick={loadDemoModel}
-                  variant="outline" 
-                  className="w-full mb-4"
-                  type="button"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Load Demo Data
-                </Button>
+                {/* Metadata Preview */}
+                {analyzingMetadata && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-panel p-4 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm">Analyzing file metadata...</span>
+                    </div>
+                  </motion.div>
+                )}
+
+                {metadataPreview && !analyzingMetadata && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-panel p-4 rounded-xl"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">File Analysis</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Size:</span>
+                        <span className="ml-2">{(metadataPreview.size / 1024 / 1024).toFixed(2)} MB</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Type:</span>
+                        <span className="ml-2">{metadataPreview.type}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Modified:</span>
+                        <span className="ml-2">{metadataPreview.lastModified}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Features:</span>
+                        <span className="ml-2">{metadataPreview.features?.join(', ')}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Batch Upload Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Batch Upload (Optional)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('batch-model-input')?.click()}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Files
+                    </Button>
+                    <input
+                      id="batch-model-input"
+                      type="file"
+                      multiple
+                      title="Select multiple model files"
+                      aria-label="Batch model file selection"
+                      className="hidden"
+                      accept=".h5,.pkl,.pt,.onnx"
+                      onChange={(e) => handleBatchFiles(e.target.files!)}
+                    />
+                  </div>
+
+                  {batchFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {batchFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-3 py-2 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <FileCode className="w-4 h-4 text-primary" />
+                            <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeBatchFile(index)}
+                            aria-label={`Remove ${file.name} from batch`}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Demo Buttons */}
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={loadDemoModel}
+                    variant="outline" 
+                    className="flex-1"
+                    type="button"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Load Demo Data
+                  </Button>
+                  <Button 
+                    onClick={insertSampleModel}
+                    variant="secondary" 
+                    className="flex-1"
+                    type="button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Insert Sample Model
+                  </Button>
+                </div>
 
                 {/* Form Fields */}
                 <div className="space-y-4">
@@ -243,24 +477,144 @@ const Upload = () => {
                         <p className="text-sm text-muted-foreground">or click to browse</p>
                         <input
                           type="file"
+                          title="Choose dataset file"
+                          aria-label="Choose dataset file"
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           accept=".csv,.json,.parquet"
+                          onChange={(e) => handleFileChange(e.target.files)}
                         />
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Demo Button */}
-                <Button 
-                  onClick={loadDemoDataset}
-                  variant="outline" 
-                  className="w-full mb-4"
-                  type="button"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Load Demo Data
-                </Button>
+                {/* Show selected file name for dataset as well */}
+                {selectedFile && (
+                  <div className="mt-4 flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-4 py-2 rounded-full max-w-md mx-auto">
+                    <div className="flex items-center gap-3">
+                      <FileCode className="w-4 h-4 text-primary" />
+                      <div className="text-sm text-foreground max-w-[220px] truncate">{selectedFile.name}</div>
+                    </div>
+                    <button type="button" onClick={clearSelectedFile} className="text-muted-foreground hover:text-foreground flex items-center gap-2">
+                      <X className="w-4 h-4" />
+                      <span className="sr-only">Clear selected file</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Metadata Preview for Dataset */}
+                {analyzingMetadata && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-panel p-4 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm">Analyzing dataset metadata...</span>
+                    </div>
+                  </motion.div>
+                )}
+
+                {metadataPreview && !analyzingMetadata && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-panel p-4 rounded-xl"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Dataset Analysis</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Size:</span>
+                        <span className="ml-2">{(metadataPreview.size / 1024 / 1024).toFixed(2)} MB</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Type:</span>
+                        <span className="ml-2">{metadataPreview.type}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Modified:</span>
+                        <span className="ml-2">{metadataPreview.lastModified}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Features:</span>
+                        <span className="ml-2">{metadataPreview.features?.join(', ')}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Batch Upload Section for Dataset */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Batch Upload (Optional)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('batch-dataset-input')?.click()}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Files
+                    </Button>
+                    <input
+                      id="batch-dataset-input"
+                      type="file"
+                      multiple
+                      title="Select multiple dataset files"
+                      aria-label="Batch dataset file selection"
+                      className="hidden"
+                      accept=".csv,.json,.parquet"
+                      onChange={(e) => handleBatchFiles(e.target.files!)}
+                    />
+                  </div>
+
+                  {batchFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {batchFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-3 py-2 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Database className="w-4 h-4 text-primary" />
+                            <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeBatchFile(index)}
+                            aria-label={`Remove ${file.name} from batch`}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Demo Buttons for Dataset */}
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={loadDemoDataset}
+                    variant="outline" 
+                    className="flex-1"
+                    type="button"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Load Demo Data
+                  </Button>
+                  <Button 
+                    onClick={insertSampleDataset}
+                    variant="secondary" 
+                    className="flex-1"
+                    type="button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Insert Sample Dataset
+                  </Button>
+                </div>
 
                 {/* Form Fields */}
                 <div className="space-y-4">

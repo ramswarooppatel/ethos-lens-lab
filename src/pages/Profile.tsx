@@ -1,18 +1,25 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Award, TrendingUp, Settings, Shield, Save } from "lucide-react";
+import { User, Award, TrendingUp, Settings, Shield, Save, Edit3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { getProfile } from "@/lib/localStorage";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { getProfile, updateProfile } from "@/lib/localStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState(getProfile());
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: profile.name,
+    role: profile.role,
+  });
   const [preferences, setPreferences] = useState({
     notifications: true,
     community: true,
@@ -21,7 +28,12 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    setProfile(getProfile());
+    const currentProfile = getProfile();
+    setProfile(currentProfile);
+    setEditForm({
+      name: currentProfile.name,
+      role: currentProfile.role,
+    });
   }, []);
 
   const userStats = [
@@ -49,6 +61,31 @@ const Profile = () => {
     });
   };
 
+  const handleEditProfile = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = () => {
+    updateProfile({
+      name: editForm.name,
+      role: editForm.role,
+    });
+    setProfile(getProfile());
+    setIsEditing(false);
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been saved successfully.",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditForm({
+      name: profile.name,
+      role: profile.role,
+    });
+    setIsEditing(false);
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
@@ -67,11 +104,34 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <Avatar className="w-24 h-24 border-4 border-primary/20">
                 <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
-                  {profile.name.split(' ').map(n => n[0]).join('')}
+                  {(isEditing ? editForm.name : profile.name).split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <Input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="text-3xl font-bold h-auto py-2 text-center md:text-left"
+                      placeholder="Your name"
+                    />
+                    <Textarea
+                      value={editForm.role}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, role: e.target.value }))}
+                      className="text-muted-foreground resize-none"
+                      placeholder="Your role/description"
+                      rows={2}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
+                    <p className="text-muted-foreground mb-4">
+                      {profile.role}
+                    </p>
+                  </>
+                )}
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3">
                   {profile.badges.includes('expert') && (
                     <Badge className="bg-primary/20 text-primary border-primary/30">
@@ -86,9 +146,11 @@ const Profile = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-muted-foreground mb-4">
-                  AI Ethics Researcher | Specializing in fairness metrics and bias detection
-                </p>
+                {!isEditing && (
+                  <p className="text-muted-foreground mb-4">
+                    AI Ethics Researcher | Specializing in fairness metrics and bias detection
+                  </p>
+                )}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between max-w-md mx-auto md:mx-0">
                     <span className="text-sm text-muted-foreground">Trust Score</span>
@@ -97,10 +159,23 @@ const Profile = () => {
                   <Progress value={profile.trustScore} className="h-2 max-w-md mx-auto md:mx-0" />
                 </div>
               </div>
-              <Button variant="outline">
-                <Settings className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button variant="hero" size="sm" onClick={handleSaveProfile}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={handleEditProfile}>
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              )}
             </div>
           </motion.div>
 

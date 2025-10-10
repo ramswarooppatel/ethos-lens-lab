@@ -78,15 +78,67 @@ All colors MUST be HSL.
 }
 
 @layer base {
+  /*
+    Fonts:
+    - Roboto is loaded via Google Fonts (fallback stack included)
+    - Klavika and Oliver (or any premium fonts) should be placed in `public/fonts/`
+      in the following formats: .woff2, .woff, .ttf (woff2 preferred).
+    - Use proper licensing for premium fonts. This file includes example @font-face
+      rules for self-hosting Klavika and Oliver. Replace the src URLs with your
+      purchased font files.
+  */
+
+  /* Roboto from Google (variable weights). You can remove this if you self-host Roboto. */
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
+  /* Example self-hosted premium fonts. Put your font files under public/fonts/ */
+  @font-face {
+    font-family: 'Klavika';
+    src: url('/fonts/klavika-regular.woff2') format('woff2'),
+         url('/fonts/klavika-regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Klavika';
+    src: url('/fonts/klavika-semibold.woff2') format('woff2'),
+         url('/fonts/klavika-semibold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Oliver';
+    src: url('/fonts/oliver-regular.woff2') format('woff2'),
+         url('/fonts/oliver-regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Oliver';
+    src: url('/fonts/oliver-semibold.woff2') format('woff2'),
+         url('/fonts/oliver-semibold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+
   * {
     @apply border-border;
   }
 
+  /* Global font stack: prefer Klavika -> Oliver -> Roboto -> Inter -> system */
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Klavika', 'Oliver', 'Roboto', 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    @apply bg-background text-foreground antialiased;
   }
-  
+
+  /* Headings use slightly stronger weight and keep the premium stack */
   h1, h2, h3, h4, h5, h6 {
+    font-family: 'Klavika', 'Oliver', 'Roboto', Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI";
     @apply font-semibold tracking-tight;
   }
 }
@@ -128,5 +180,9 @@ All colors MUST be HSL.
   @keyframes glow {
     from { box-shadow: 0 0 10px hsl(var(--glow-primary)), 0 0 20px hsl(var(--glow-primary)); }
     to { box-shadow: 0 0 20px hsl(var(--glow-primary)), 0 0 40px hsl(var(--glow-primary)); }
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
   }
 }

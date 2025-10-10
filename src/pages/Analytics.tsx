@@ -11,6 +11,15 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
+interface RegionData {
+  region: string;
+  fairness: number;
+  models: number;
+  lat: number;
+  lng: number;
+  description: string;
+}
+
 const Analytics = () => {
   const { toast } = useToast();
   const [globalScore, setGlobalScore] = useState(75);
@@ -18,6 +27,7 @@ const Analytics = () => {
   const [selectedModel, setSelectedModel] = useState("all");
   const [selectedDataset, setSelectedDataset] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedGlobeRegion, setSelectedGlobeRegion] = useState<RegionData | null>(null);
 
   const regionalData = [
     { region: "North America", fairness: 78, models: 234 },
@@ -240,6 +250,103 @@ const Analytics = () => {
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+
+          {/* 3D Globe Visualization */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="glass-panel p-8 rounded-2xl"
+          >
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Globe className="w-6 h-6 text-primary" />
+              3D Fairness Globe
+            </h2>
+            <div className="mb-6">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  setSelectedGlobeRegion({
+                    region: "North America",
+                    fairness: 78,
+                    models: 234,
+                    lat: 37.0902,
+                    lng: -95.7129,
+                    description: "Demo selection: North America region details.",
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setSelectedGlobeRegion({
+                      region: "North America",
+                      fairness: 78,
+                      models: 234,
+                      lat: 37.0902,
+                      lng: -95.7129,
+                      description: "Demo selection: North America region details.",
+                    });
+                  }
+                }}
+                className="inline-flex items-center gap-3 cursor-pointer"
+              >
+                <Globe className="w-12 h-12 text-primary" />
+                <span className="text-sm text-muted-foreground">Click globe to inspect regions</span>
+              </div>
+            </div>
+
+            {/* Region Details Panel */}
+            {selectedGlobeRegion && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-panel p-6 rounded-xl border border-primary/20"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">{selectedGlobeRegion.region}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedGlobeRegion.fairness >= 80 ? 'bg-green-100 text-green-800' :
+                      selectedGlobeRegion.fairness >= 75 ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedGlobeRegion.fairness}% Fairness
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">{selectedGlobeRegion.models}</div>
+                    <div className="text-sm text-muted-foreground">Models Analyzed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-accent">
+                      {selectedGlobeRegion.fairness >= 75 ? 'High' : selectedGlobeRegion.fairness >= 70 ? 'Medium' : 'Low'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Fairness Level</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">
+                      {((selectedGlobeRegion.models / 878) * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-muted-foreground">Global Share</div>
+                  </div>
+                </div>
+
+                <p className="text-muted-foreground">{selectedGlobeRegion.description}</p>
+
+                <div className="mt-4 flex gap-2">
+                  <Button variant="outline" size="sm">
+                    View Detailed Report
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Compare Regions
+                  </Button>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Export */}
