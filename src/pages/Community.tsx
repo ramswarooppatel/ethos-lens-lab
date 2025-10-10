@@ -1,49 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, MessageSquare, Award, Shield, TrendingUp } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Award, Shield, TrendingUp, Plus, Sparkles, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { getPosts, addPost, votePost } from "@/lib/localStorage";
+import { generateMockPost } from "@/lib/mockData";
+import { useToast } from "@/hooks/use-toast";
 
 const Community = () => {
-  const [posts] = useState([
-    {
-      id: 1,
-      author: "Dr. Sarah Chen",
-      role: "Verified Expert",
-      trustScore: 95,
-      title: "Potential Age Bias in Healthcare Model XYZ-2024",
-      summary: "Detected significant disparities in prediction accuracy for patients over 65. The model shows 23% lower sensitivity for this demographic compared to younger age groups.",
-      upvotes: 142,
-      downvotes: 8,
-      comments: 34,
-      badge: "expert",
-    },
-    {
-      id: 2,
-      author: "Alex Kumar",
-      role: "Research Contributor",
-      trustScore: 87,
-      title: "Gender Bias in Resume Screening Algorithm",
-      summary: "Analysis reveals systematic bias against female candidates in technical roles. Model assigns 15% lower scores on average when gendered pronouns are changed.",
-      upvotes: 98,
-      downvotes: 12,
-      comments: 28,
-      badge: "contributor",
-    },
-    {
-      id: 3,
-      author: "Maria Rodriguez",
-      role: "Citizen Reviewer",
-      trustScore: 72,
-      title: "Location-Based Discrimination in Credit Scoring",
-      summary: "Urban vs rural address analysis shows potential redlining patterns. Applicants from rural zip codes receive 18% more rejections with similar credit profiles.",
-      upvotes: 76,
-      downvotes: 5,
-      comments: 19,
-      badge: "citizen",
-    },
-  ]);
+  const { toast } = useToast();
+  const [posts, setPosts] = useState(getPosts());
+  const [votedPosts, setVotedPosts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const storedPosts = getPosts();
+    if (storedPosts.length === 0) {
+      // Add initial demo posts
+      const demoPosts = Array.from({ length: 3 }, generateMockPost);
+      demoPosts.forEach(post => addPost(post));
+      setPosts(getPosts());
+    } else {
+      setPosts(storedPosts);
+    }
+  }, []);
+
+  const handleVote = (postId: string, type: 'up' | 'down') => {
+    if (votedPosts.has(postId)) {
+      toast({
+        title: "Already Voted",
+        description: "You have already voted on this post.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    votePost(postId, type);
+    setVotedPosts(prev => new Set([...prev, postId]));
+    setPosts(getPosts());
+    
+    toast({
+      title: type === 'up' ? "Upvoted" : "Downvoted",
+      description: "Your vote has been recorded.",
+    });
+  };
+
+  const createNewPost = () => {
+    const newPost = generateMockPost();
+    addPost(newPost);
+    setPosts(getPosts());
+    
+    toast({
+      title: "Post Created",
+      description: "Your community post has been published.",
+    });
+  };
+
+  const loadMorePosts = () => {
+    const newPosts = Array.from({ length: 2 }, generateMockPost);
+    newPosts.forEach(post => addPost(post));
+    setPosts(getPosts());
+    
+    toast({
+      title: "Posts Loaded",
+      description: "New discussions have been loaded.",
+    });
+  };
 
   const leaderboard = [
     { name: "Dr. Sarah Chen", score: 2847, badge: "expert" },
@@ -83,12 +105,20 @@ const Community = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Community <span className="text-gradient">Hub</span>
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Collaborative discussions on AI ethics and bias detection
-            </p>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-2">
+                  Community <span className="text-gradient">Hub</span>
+                </h1>
+                <p className="text-xl text-muted-foreground">
+                  {posts.length} active discussions on AI ethics and bias detection
+                </p>
+              </div>
+              <Button onClick={createNewPost} variant="hero">
+                <Plus className="w-4 h-4" />
+                Create Post
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -134,12 +164,22 @@ const Community = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <ThumbsUp className="w-4 h-4" />
+                    <Button 
+                      variant={votedPosts.has(post.id) ? "secondary" : "ghost"} 
+                      size="sm" 
+                      className="gap-2"
+                      onClick={() => handleVote(post.id, 'up')}
+                    >
+                      <ArrowUp className="w-4 h-4" />
                       {post.upvotes}
                     </Button>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <ThumbsDown className="w-4 h-4" />
+                    <Button 
+                      variant={votedPosts.has(post.id) ? "secondary" : "ghost"} 
+                      size="sm" 
+                      className="gap-2"
+                      onClick={() => handleVote(post.id, 'down')}
+                    >
+                      <ArrowDown className="w-4 h-4" />
                       {post.downvotes}
                     </Button>
                     <Button variant="ghost" size="sm" className="gap-2">
@@ -150,7 +190,8 @@ const Community = () => {
                 </motion.div>
               ))}
 
-              <Button variant="hero" className="w-full" size="lg">
+              <Button onClick={loadMorePosts} variant="hero" className="w-full" size="lg">
+                <Sparkles className="w-4 h-4" />
                 Load More Discussions
               </Button>
             </div>
@@ -202,8 +243,9 @@ const Community = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Found bias in an AI model? Share your analysis with the community.
                 </p>
-                <Button variant="hero" className="w-full">
-                  Create Post
+                <Button onClick={createNewPost} variant="hero" className="w-full">
+                  <Plus className="w-4 h-4" />
+                  Create New Post
                 </Button>
               </motion.div>
             </div>

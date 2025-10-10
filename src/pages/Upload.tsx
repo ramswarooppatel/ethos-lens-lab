@@ -1,17 +1,27 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Upload as UploadIcon, FileCode, Database, Loader2, CheckCircle2 } from "lucide-react";
+import { Upload as UploadIcon, FileCode, Database, Loader2, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { addModel, addDataset, addReport, incrementStat } from "@/lib/localStorage";
+import { generateMockModel, generateMockDataset, generateMockReport } from "@/lib/mockData";
 
 const Upload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [modelName, setModelName] = useState('');
+  const [modelTags, setModelTags] = useState('');
+  const [modelDescription, setModelDescription] = useState('');
+  const [datasetName, setDatasetName] = useState('');
+  const [datasetTags, setDatasetTags] = useState('');
+  const [datasetDescription, setDatasetDescription] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleUpload = (type: "model" | "dataset") => {
     setUploading(true);
@@ -19,15 +29,60 @@ const Upload = () => {
 
     // Simulate upload process
     setTimeout(() => {
-      setUploading(false);
-      setUploadComplete(true);
-      toast({
-        title: "Upload Successful",
-        description: `Your ${type} has been uploaded and is being analyzed.`,
-      });
+      if (type === 'model') {
+        const model = generateMockModel();
+        model.name = modelName || model.name;
+        model.tags = modelTags ? modelTags.split(',').map(t => t.trim()) : model.tags;
+        model.description = modelDescription || model.description;
+        
+        addModel(model);
+        const report = generateMockReport(model.id, model.name);
+        addReport(report);
+        incrementStat('modelsAudited');
+        incrementStat('reportsGenerated');
 
-      setTimeout(() => setUploadComplete(false), 3000);
+        setUploading(false);
+        setUploadComplete(true);
+        
+        toast({
+          title: "Upload Successful",
+          description: "Your model has been uploaded and analyzed. Redirecting to dashboard...",
+        });
+
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      } else {
+        const dataset = generateMockDataset();
+        dataset.name = datasetName || dataset.name;
+        dataset.tags = datasetTags ? datasetTags.split(',').map(t => t.trim()) : dataset.tags;
+        dataset.description = datasetDescription || dataset.description;
+        
+        addDataset(dataset);
+        
+        setUploading(false);
+        setUploadComplete(true);
+        
+        toast({
+          title: "Upload Successful",
+          description: "Your dataset has been uploaded and is ready for analysis.",
+        });
+
+        setTimeout(() => setUploadComplete(false), 3000);
+      }
     }, 2000);
+  };
+
+  const loadDemoModel = () => {
+    setModelName('ResNet-50 Healthcare Classifier');
+    setModelTags('computer-vision, healthcare, diagnostic');
+    setModelDescription('Deep learning model for medical image classification trained on diverse patient demographics.');
+  };
+
+  const loadDemoDataset = () => {
+    setDatasetName('Healthcare Patient Records 2024');
+    setDatasetTags('demographics, medical, structured');
+    setDatasetDescription('Anonymized patient records with demographic information including age, gender, location, and medical history.');
   };
 
   return (
@@ -93,6 +148,17 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {/* Demo Button */}
+                <Button 
+                  onClick={loadDemoModel}
+                  variant="outline" 
+                  className="w-full mb-4"
+                  type="button"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Load Demo Data
+                </Button>
+
                 {/* Form Fields */}
                 <div className="space-y-4">
                   <div>
@@ -101,6 +167,8 @@ const Upload = () => {
                       id="model-name"
                       placeholder="e.g., ResNet-50 Classifier"
                       className="glass-panel border-foreground/20"
+                      value={modelName}
+                      onChange={(e) => setModelName(e.target.value)}
                     />
                   </div>
 
@@ -110,6 +178,8 @@ const Upload = () => {
                       id="model-tags"
                       placeholder="e.g., computer-vision, classification"
                       className="glass-panel border-foreground/20"
+                      value={modelTags}
+                      onChange={(e) => setModelTags(e.target.value)}
                     />
                   </div>
 
@@ -119,6 +189,8 @@ const Upload = () => {
                       id="model-description"
                       placeholder="Describe your model's purpose and training data..."
                       className="glass-panel border-foreground/20 min-h-[120px]"
+                      value={modelDescription}
+                      onChange={(e) => setModelDescription(e.target.value)}
                     />
                   </div>
                 </div>
@@ -137,8 +209,8 @@ const Upload = () => {
                     </>
                   ) : (
                     <>
-                      <UploadIcon className="w-4 h-4" />
-                      Submit Model
+                      <ArrowRight className="w-4 h-4" />
+                      Submit Model & Analyze
                     </>
                   )}
                 </Button>
@@ -179,6 +251,17 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {/* Demo Button */}
+                <Button 
+                  onClick={loadDemoDataset}
+                  variant="outline" 
+                  className="w-full mb-4"
+                  type="button"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Load Demo Data
+                </Button>
+
                 {/* Form Fields */}
                 <div className="space-y-4">
                   <div>
@@ -187,6 +270,8 @@ const Upload = () => {
                       id="dataset-name"
                       placeholder="e.g., Healthcare Patient Records"
                       className="glass-panel border-foreground/20"
+                      value={datasetName}
+                      onChange={(e) => setDatasetName(e.target.value)}
                     />
                   </div>
 
@@ -196,6 +281,8 @@ const Upload = () => {
                       id="dataset-tags"
                       placeholder="e.g., healthcare, demographics"
                       className="glass-panel border-foreground/20"
+                      value={datasetTags}
+                      onChange={(e) => setDatasetTags(e.target.value)}
                     />
                   </div>
 
@@ -205,6 +292,8 @@ const Upload = () => {
                       id="dataset-description"
                       placeholder="Describe your dataset's features and collection methodology..."
                       className="glass-panel border-foreground/20 min-h-[120px]"
+                      value={datasetDescription}
+                      onChange={(e) => setDatasetDescription(e.target.value)}
                     />
                   </div>
                 </div>

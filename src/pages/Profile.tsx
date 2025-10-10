@@ -1,26 +1,53 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Award, TrendingUp, Settings, Shield } from "lucide-react";
+import { User, Award, TrendingUp, Settings, Shield, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { getProfile } from "@/lib/localStorage";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
+  const { toast } = useToast();
+  const [profile, setProfile] = useState(getProfile());
+  const [preferences, setPreferences] = useState({
+    notifications: true,
+    community: true,
+    analytics: false,
+    publicProfile: true,
+  });
+
+  useEffect(() => {
+    setProfile(getProfile());
+  }, []);
+
   const userStats = [
-    { label: "Models Audited", value: 23 },
-    { label: "Community Posts", value: 15 },
-    { label: "Reports Generated", value: 31 },
-    { label: "Upvotes Received", value: 342 },
+    { label: "Models Audited", value: profile.stats.modelsAudited },
+    { label: "Community Posts", value: profile.stats.communityPosts },
+    { label: "Reports Generated", value: profile.stats.reportsGenerated },
+    { label: "Upvotes Received", value: profile.stats.upvotesReceived },
   ];
 
   const achievements = [
-    { name: "First Audit", description: "Completed your first model audit", unlocked: true },
-    { name: "Community Hero", description: "Received 100+ upvotes", unlocked: true },
-    { name: "Expert Reviewer", description: "Verified by the community", unlocked: true },
-    { name: "Bias Hunter", description: "Detected 10+ critical biases", unlocked: false },
+    { name: "First Audit", description: "Completed your first model audit", unlocked: profile.stats.modelsAudited >= 1 },
+    { name: "Community Hero", description: "Received 100+ upvotes", unlocked: profile.stats.upvotesReceived >= 100 },
+    { name: "Expert Reviewer", description: "Verified by the community", unlocked: profile.trustScore >= 90 },
+    { name: "Bias Hunter", description: "Detected 10+ critical biases", unlocked: profile.stats.reportsGenerated >= 10 },
   ];
+
+  const handlePreferenceChange = (key: keyof typeof preferences) => {
+    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const savePreferences = () => {
+    toast({
+      title: "Preferences Saved",
+      description: "Your settings have been updated successfully.",
+    });
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-12">
@@ -40,20 +67,24 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <Avatar className="w-24 h-24 border-4 border-primary/20">
                 <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
-                  SC
+                  {profile.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold mb-2">Sarah Chen</h1>
+                <h1 className="text-3xl font-bold mb-2">{profile.name}</h1>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3">
-                  <Badge className="bg-primary/20 text-primary border-primary/30">
-                    <Shield className="w-3 h-3 mr-1" />
-                    Verified Expert
-                  </Badge>
-                  <Badge className="bg-accent/20 text-accent border-accent/30">
-                    <Award className="w-3 h-3 mr-1" />
-                    Top Contributor
-                  </Badge>
+                  {profile.badges.includes('expert') && (
+                    <Badge className="bg-primary/20 text-primary border-primary/30">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Verified Expert
+                    </Badge>
+                  )}
+                  {profile.badges.includes('contributor') && (
+                    <Badge className="bg-accent/20 text-accent border-accent/30">
+                      <Award className="w-3 h-3 mr-1" />
+                      Top Contributor
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-muted-foreground mb-4">
                   AI Ethics Researcher | Specializing in fairness metrics and bias detection
@@ -61,9 +92,9 @@ const Profile = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between max-w-md mx-auto md:mx-0">
                     <span className="text-sm text-muted-foreground">Trust Score</span>
-                    <span className="font-bold text-primary">95/100</span>
+                    <span className="font-bold text-primary">{profile.trustScore}/100</span>
                   </div>
-                  <Progress value={95} className="h-2 max-w-md mx-auto md:mx-0" />
+                  <Progress value={profile.trustScore} className="h-2 max-w-md mx-auto md:mx-0" />
                 </div>
               </div>
               <Button variant="outline">
@@ -154,52 +185,73 @@ const Profile = () => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="notifications" className="text-base font-medium">
-                      Email Notifications
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive updates on your audits
-                    </p>
+                      <Label htmlFor="notifications" className="text-base font-medium">
+                        Email Notifications
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive updates on your audits
+                      </p>
+                    </div>
+                    <Switch 
+                      id="notifications" 
+                      checked={preferences.notifications}
+                      onCheckedChange={() => handlePreferenceChange('notifications')}
+                    />
                   </div>
-                  <Switch id="notifications" defaultChecked />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="community" className="text-base font-medium">
-                      Community Posts
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified of new discussions
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="community" className="text-base font-medium">
+                        Community Posts
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified of new discussions
+                      </p>
+                    </div>
+                    <Switch 
+                      id="community" 
+                      checked={preferences.community}
+                      onCheckedChange={() => handlePreferenceChange('community')}
+                    />
                   </div>
-                  <Switch id="community" defaultChecked />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="analytics" className="text-base font-medium">
-                      Analytics Insights
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Weekly fairness trend reports
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="analytics" className="text-base font-medium">
+                        Analytics Insights
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Weekly fairness trend reports
+                      </p>
+                    </div>
+                    <Switch 
+                      id="analytics" 
+                      checked={preferences.analytics}
+                      onCheckedChange={() => handlePreferenceChange('analytics')}
+                    />
                   </div>
-                  <Switch id="analytics" />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="public-profile" className="text-base font-medium">
-                      Public Profile
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Show your profile to the community
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="public-profile" className="text-base font-medium">
+                        Public Profile
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Show your profile to the community
+                      </p>
+                    </div>
+                    <Switch 
+                      id="public-profile" 
+                      checked={preferences.publicProfile}
+                      onCheckedChange={() => handlePreferenceChange('publicProfile')}
+                    />
                   </div>
-                  <Switch id="public-profile" defaultChecked />
+
+                  <Button onClick={savePreferences} variant="hero" className="w-full mt-4">
+                    <Save className="w-4 h-4" />
+                    Save Preferences
+                  </Button>
                 </div>
-              </div>
 
               <div className="mt-8 pt-6 border-t border-foreground/10">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
@@ -209,9 +261,9 @@ const Profile = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Progress to Expert</span>
-                    <span className="font-semibold">2,847 / 3,000 XP</span>
+                    <span className="font-semibold">{profile.xp} / 3,000 XP</span>
                   </div>
-                  <Progress value={94.9} className="h-2" />
+                  <Progress value={(profile.xp / 3000) * 100} className="h-2" />
                 </div>
               </div>
             </motion.div>

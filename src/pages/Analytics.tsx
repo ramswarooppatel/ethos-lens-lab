@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, Filter, Globe, AlertTriangle } from "lucide-react";
+import { TrendingUp, Filter, Globe, AlertTriangle, Download, RefreshCw, Sparkles, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -8,8 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const Analytics = () => {
+  const { toast } = useToast();
+  const [globalScore, setGlobalScore] = useState(75);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("all");
+  const [selectedDataset, setSelectedDataset] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+
   const regionalData = [
     { region: "North America", fairness: 78, models: 234 },
     { region: "Europe", fairness: 82, models: 189 },
@@ -27,6 +36,26 @@ const Analytics = () => {
     { month: "Jun", score: 74 },
   ];
 
+  const refreshData = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      const newScore = Math.floor(Math.random() * 20) + 70;
+      setGlobalScore(newScore);
+      setRefreshing(false);
+      toast({
+        title: "Analytics Refreshed",
+        description: "Latest fairness data has been loaded.",
+      });
+    }, 1500);
+  };
+
+  const exportReport = () => {
+    toast({
+      title: "Exporting Analytics",
+      description: "Global analytics report is being prepared for download.",
+    });
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4 lg:px-8">
@@ -36,13 +65,21 @@ const Analytics = () => {
           transition={{ duration: 0.6 }}
         >
           {/* Header */}
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Global <span className="text-gradient">Analytics</span>
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Insights across models, datasets, and regions
-            </p>
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-2">
+                  Global <span className="text-gradient">Analytics</span>
+                </h1>
+                <p className="text-xl text-muted-foreground">
+                  Real-time insights across 878 models and datasets
+                </p>
+              </div>
+              <Button onClick={refreshData} variant="glass" disabled={refreshing}>
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh Data
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -57,7 +94,7 @@ const Analytics = () => {
               <h3 className="font-semibold">Filters</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Select defaultValue="all">
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger className="glass-panel border-foreground/20">
                   <SelectValue placeholder="Model Type" />
                 </SelectTrigger>
@@ -69,7 +106,7 @@ const Analytics = () => {
                 </SelectContent>
               </Select>
 
-              <Select defaultValue="all">
+              <Select value={selectedDataset} onValueChange={setSelectedDataset}>
                 <SelectTrigger className="glass-panel border-foreground/20">
                   <SelectValue placeholder="Dataset Type" />
                 </SelectTrigger>
@@ -81,7 +118,7 @@ const Analytics = () => {
                 </SelectContent>
               </Select>
 
-              <Select defaultValue="all">
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                 <SelectTrigger className="glass-panel border-foreground/20">
                   <SelectValue placeholder="Region" />
                 </SelectTrigger>
@@ -126,12 +163,12 @@ const Analytics = () => {
                       stroke="currentColor"
                       strokeWidth="12"
                       fill="none"
-                      strokeDasharray={`${75 * 5.026} ${100 * 5.026}`}
+                      strokeDasharray={`${globalScore * 5.026} ${100 * 5.026}`}
                       className="text-primary glow-primary"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <span className="text-5xl font-bold">75</span>
+                    <span className="text-5xl font-bold">{globalScore}</span>
                     <span className="text-sm text-muted-foreground">Fairness Score</span>
                   </div>
                 </div>
@@ -165,8 +202,8 @@ const Analytics = () => {
                         />
                       </div>
                       <div className="w-12 text-sm font-semibold">{data.score}%</div>
-                      {trend === "up" && <TrendingUp className="w-4 h-4 text-primary" />}
-                      {trend === "down" && <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />}
+                      {trend === "up" && <ArrowUp className="w-4 h-4 text-primary" />}
+                      {trend === "down" && <ArrowDown className="w-4 h-4 text-red-400" />}
                     </div>
                   );
                 })}
