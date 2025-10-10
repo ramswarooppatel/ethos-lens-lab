@@ -1,7 +1,23 @@
 import React, { useRef, useState, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sphere, Html } from '@react-three/drei';
 import * as THREE from 'three';
+
+interface NodeData {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  status: 'Fair' | 'InProgress' | 'Biased';
+  score: number;
+  description: string;
+  region: string;
+}
+
+interface GlobeProps {
+  onNodeClick: (node: NodeData) => void;
+  onNodeHover: (node: NodeData | null) => void;
+}
 
 interface NodeData {
   id: string;
@@ -229,8 +245,32 @@ function latLngToVector3(lat: number, lng: number, radius: number = 1): [number,
   return [x, y, z];
 }
 
-function GlobeScene({ onNodeClick, onNodeHover }: GlobeProps) {
+function Earth({ onNodeClick, onNodeHover }: GlobeProps) {
+  const earthRef = useRef<THREE.Mesh>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
   const [hoveredNode, setHoveredNode] = useState<NodeData | null>(null);
+
+  // Load Earth textures
+  const earthTexture = useLoader(THREE.TextureLoader, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/earthmap1k.jpg');
+  const earthBumpMap = useLoader(THREE.TextureLoader, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/earthbump1k.jpg');
+  const earthSpecularMap = useLoader(THREE.TextureLoader, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/earthspec1k.jpg');
+  const cloudsTexture = useLoader(THREE.TextureLoader, 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images/earthcloudmap.jpg');
+
+  // Configure textures
+  earthTexture.wrapS = earthTexture.wrapT = THREE.RepeatWrapping;
+  earthBumpMap.wrapS = earthBumpMap.wrapT = THREE.RepeatWrapping;
+  earthSpecularMap.wrapS = earthSpecularMap.wrapT = THREE.RepeatWrapping;
+  cloudsTexture.wrapS = cloudsTexture.wrapT = THREE.RepeatWrapping;
+
+  // Animate Earth rotation
+  useFrame((state) => {
+    if (earthRef.current) {
+      earthRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+    }
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y = state.clock.elapsedTime * 0.12; // Clouds rotate slightly faster
+    }
+  });
 
   const nodes = nodeData.map((node) => {
     const position = latLngToVector3(node.lat, node.lng, 1.03);
@@ -248,27 +288,56 @@ function GlobeScene({ onNodeClick, onNodeHover }: GlobeProps) {
   });
 
   return (
-    <>
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={0.8} />
-      <pointLight position={[-10, -10, -10]} intensity={0.3} />
+    <group>
+      {/* Enhanced lighting for realistic Earth appearance */}
+      <ambientLight intensity={0.1} />
+      <directionalLight
+        position={[5, 3, 5]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+      <pointLight position={[-10, -10, -10]} intensity={0.3} color="#4169E1" />
 
-      {/* Earth sphere with dark theme */}
-      <Sphere args={[1, 64, 64]}>
+      {/* Earth surface with realistic textures */}
+      <Sphere ref={earthRef} args={[1, 128, 128]} castShadow receiveShadow>
         <meshPhongMaterial
-          color="#1a1a2e"
-          transparent
-          opacity={0.9}
-          shininess={0.1}
+          map={earthTexture}
+          bumpMap={earthBumpMap}
+          bumpScale={0.05}
+          specularMap={earthSpecularMap}
+          specular={0x111111}
+          shininess={10}
         />
       </Sphere>
 
-      {/* Atmosphere effect */}
-      <Sphere args={[1.05, 32, 32]}>
+      {/* Cloud layer */}
+      <Sphere ref={cloudsRef} args={[1.01, 64, 64]}>
+        <meshPhongMaterial
+          map={cloudsTexture}
+          transparent
+          opacity={0.4}
+          alphaMap={cloudsTexture}
+          side={THREE.DoubleSide}
+        />
+      </Sphere>
+
+      {/* Enhanced atmosphere with multiple layers */}
+      <Sphere args={[1.05, 64, 64]}>
+        <meshBasicMaterial
+          color="#87CEEB"
+          transparent
+          opacity={0.15}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+
+      <Sphere args={[1.08, 32, 32]}>
         <meshBasicMaterial
           color="#4c1d95"
           transparent
-          opacity={0.1}
+          opacity={0.08}
           side={THREE.BackSide}
         />
       </Sphere>
@@ -291,6 +360,14 @@ function GlobeScene({ onNodeClick, onNodeHover }: GlobeProps) {
           {node}
         </group>
       ))}
+    </group>
+  );
+}
+
+function GlobeScene({ onNodeClick, onNodeHover }: GlobeProps) {
+  return (
+    <>
+      <Earth onNodeClick={onNodeClick} onNodeHover={onNodeHover} />
 
       <OrbitControls
         enablePan={false}
