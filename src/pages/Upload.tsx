@@ -432,7 +432,7 @@ const Upload = () => {
                 <Button
                   onClick={() => handleUpload("model")}
                   disabled={uploading}
-                  variant="hero"
+                  variant="default"
                   className="w-full"
                   size="lg"
                 >
@@ -655,7 +655,7 @@ const Upload = () => {
                 <Button
                   onClick={() => handleUpload("dataset")}
                   disabled={uploading}
-                  variant="hero"
+                  variant="default"
                   className="w-full"
                   size="lg"
                 >

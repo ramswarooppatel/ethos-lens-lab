@@ -101,7 +101,7 @@ const Reports = () => {
               <p className="text-muted-foreground mb-6">
                 Upload and analyze a model to generate transparency reports
               </p>
-              <Button variant="hero" asChild>
+              <Button variant="default" asChild>
                 <a href="/upload">
                   <Sparkles className="w-4 h-4" />
                   Upload Model
@@ -147,8 +147,8 @@ const Reports = () => {
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <Button 
-                  variant="hero" 
-                  size="lg" 
+                  variant="default" 
+                  size="lg"
                   className="flex-1"
                   onClick={() => handleExport('pdf')}
                   disabled={exportType === 'pdf'}
@@ -184,7 +184,7 @@ const Reports = () => {
                     </>
                   )}
                 </Button>
-                <Button variant="glass" size="lg">
+                <Button variant="secondary" size="lg">
                   <Share2 className="w-4 h-4" />
                 </Button>
               </motion.div>

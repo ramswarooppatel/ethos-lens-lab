@@ -1,22 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, MessageSquare, Award, Shield, TrendingUp, Plus, Sparkles, ArrowUp, ArrowDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Award, Shield, TrendingUp, Plus, Sparkles, ArrowUp, ArrowDown, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getPosts, addPost, votePost } from "@/lib/localStorage";
+import { getPosts, addPost, votePost, deletePost } from "@/lib/localStorage";
 import { generateMockPost } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
+import { CreatePostDialog } from "@/components/CreatePostDialog";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Community = () => {
   const { toast } = useToast();
   const [posts, setPosts] = useState(getPosts());
   const [votedPosts, setVotedPosts] = useState<Set<string>>(new Set());
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const postsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const storedPosts = getPosts();
     if (storedPosts.length === 0) {
-      // Add initial demo posts
       const demoPosts = Array.from({ length: 3 }, generateMockPost);
       demoPosts.forEach(post => addPost(post));
       setPosts(getPosts());
@@ -24,6 +33,27 @@ const Community = () => {
       setPosts(storedPosts);
     }
   }, []);
+
+  useEffect(() => {
+    if (postsContainerRef.current) {
+      const posts = postsContainerRef.current.querySelectorAll('.post-card');
+      gsap.fromTo(
+        posts,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: postsContainerRef.current,
+            start: "top 80%",
+          }
+        }
+      );
+    }
+  }, [posts.length]);
 
   const handleVote = (postId: string, type: 'up' | 'down') => {
     if (votedPosts.has(postId)) {
@@ -45,8 +75,10 @@ const Community = () => {
     });
   };
 
-  const createNewPost = () => {
+  const handleCreatePost = (data: { title: string; content: string; tags: string[] }) => {
     const newPost = generateMockPost();
+    newPost.title = data.title;
+    newPost.summary = data.content;
     addPost(newPost);
     setPosts(getPosts());
     
@@ -65,6 +97,24 @@ const Community = () => {
       title: "Posts Loaded",
       description: "New discussions have been loaded.",
     });
+  };
+
+  const handleDeletePost = (postId: string) => {
+    setPostToDelete(postId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (postToDelete) {
+      deletePost(postToDelete);
+      setPosts(getPosts());
+      toast({
+        title: "Post Deleted",
+        description: "The post has been removed successfully.",
+      });
+    }
+    setDeleteDialogOpen(false);
+    setPostToDelete(null);
   };
 
   const leaderboard = [
@@ -108,13 +158,13 @@ const Community = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                  Community <span className="text-gradient">Hub</span>
+                  Community Hub
                 </h1>
                 <p className="text-xl text-muted-foreground">
                   {posts.length} active discussions on AI ethics and bias detection
                 </p>
               </div>
-              <Button onClick={createNewPost} variant="hero">
+              <Button onClick={() => setCreateDialogOpen(true)} variant="default">
                 <Plus className="w-4 h-4" />
                 Create Post
               </Button>
@@ -122,17 +172,12 @@ const Community = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Discussion Posts */}
-            <div className="lg:col-span-2 space-y-6">
-              {posts.map((post, index) => (
-                <motion.div
+            <div ref={postsContainerRef} className="lg:col-span-2 space-y-6">
+              {posts.map((post) => (
+                <div
                   key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.6 }}
-                  className="glass-panel-hover p-6 rounded-2xl"
+                  className="post-card glass-panel-hover p-6 rounded-lg"
                 >
-                  {/* Author Info */}
                   <div className="flex items-start gap-4 mb-4">
                     <Avatar className="w-12 h-12 border-2 border-primary/20">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -154,15 +199,20 @@ const Community = () => {
                         Trust Score: {post.trustScore}%
                       </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeletePost(post.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
                   </div>
 
-                  {/* Post Content */}
                   <h2 className="text-xl font-bold mb-3">{post.title}</h2>
                   <p className="text-muted-foreground mb-4 leading-relaxed">
                     {post.summary}
                   </p>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-4">
                     <Button 
                       variant={votedPosts.has(post.id) ? "secondary" : "ghost"} 
@@ -187,33 +237,31 @@ const Community = () => {
                       {post.comments}
                     </Button>
                   </div>
-                </motion.div>
+                </div>
               ))}
 
-              <Button onClick={loadMorePosts} variant="hero" className="w-full" size="lg">
+              <Button onClick={loadMorePosts} variant="default" className="w-full" size="lg">
                 <Sparkles className="w-4 h-4" />
                 Load More Discussions
               </Button>
             </div>
 
-            {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">
-              {/* Leaderboard */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="glass-panel p-6 rounded-2xl border-accent/20 sticky top-24"
+                className="glass-panel p-6 rounded-lg sticky top-24"
               >
                 <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp className="w-6 h-6 text-accent" />
+                  <TrendingUp className="w-6 h-6 text-primary" />
                   <h3 className="text-xl font-bold">Top Reviewers</h3>
                 </div>
                 <div className="space-y-4">
                   {leaderboard.map((user, index) => (
                     <div
                       key={user.name}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
                     >
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
                         {index + 1}
@@ -232,18 +280,17 @@ const Community = () => {
                 </div>
               </motion.div>
 
-              {/* Create Post */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="glass-panel p-6 rounded-2xl"
+                className="glass-panel p-6 rounded-lg"
               >
                 <h3 className="text-lg font-bold mb-4">Share Your Findings</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Found bias in an AI model? Share your analysis with the community.
                 </p>
-                <Button onClick={createNewPost} variant="hero" className="w-full">
+                <Button onClick={() => setCreateDialogOpen(true)} variant="default" className="w-full">
                   <Plus className="w-4 h-4" />
                   Create New Post
                 </Button>
@@ -252,6 +299,20 @@ const Community = () => {
           </div>
         </motion.div>
       </div>
+
+      <CreatePostDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreatePost}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Post?"
+        description="Are you sure you want to delete this post? This action cannot be undone."
+      />
     </div>
   );
 };

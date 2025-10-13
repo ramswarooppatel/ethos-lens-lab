@@ -13,21 +13,25 @@ export default {
       },
     },
     extend: {
-      // Premium font stack: prefer self-hosted Klavika or Oliver, then Roboto, then Inter/system
       fontFamily: {
         sans: [
-          'Klavika',
-          'Oliver',
-          'Roboto',
           'Inter',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
           'Segoe UI',
-          'Roboto',
           'Helvetica Neue',
           'Arial',
           'Noto Sans',
+        ],
+        mono: [
+          'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          'monospace',
         ],
       },
       colors: {

@@ -157,6 +157,12 @@ export const votePost = (postId: string, type: 'up' | 'down'): void => {
   setItem(STORAGE_KEYS.POSTS, updatedPosts);
 };
 
+export const deletePost = (postId: string): void => {
+  const posts = getPosts();
+  const filteredPosts = posts.filter(p => p.id !== postId);
+  setItem(STORAGE_KEYS.POSTS, filteredPosts);
+};
+
 // User Profile
 export const getProfile = (): UserProfile => {
   return getItem<UserProfile>(STORAGE_KEYS.PROFILE) || {

@@ -183,7 +183,7 @@ const Dashboard = () => {
                   <Sparkles className="w-4 h-4" />
                   Load Demo
                 </Button>
-                <Button onClick={refreshAnalysis} variant="glass" disabled={analyzing || !currentReport}>
+                <Button onClick={refreshAnalysis} variant="secondary" disabled={analyzing || !currentReport}>
                   <RefreshCw className={`w-4 h-4 ${analyzing ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -203,7 +203,7 @@ const Dashboard = () => {
               </p>
               <div className="flex gap-4 justify-center">
                 <Link to="/upload">
-                  <Button variant="hero">
+                  <Button variant="default">
                     <ArrowRight className="w-4 h-4" />
                     Upload Model
                   </Button>
@@ -460,7 +460,7 @@ const Dashboard = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link to="/reports">
-              <Button variant="hero" size="lg">
+              <Button variant="default" size="lg">
                 View Detailed Report
               </Button>
             </Link>

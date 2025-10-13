@@ -115,7 +115,7 @@ const Analytics = () => {
                   Real-time insights across 878 models and datasets
                 </p>
               </div>
-              <Button onClick={refreshData} variant="glass" disabled={refreshing}>
+              <Button onClick={refreshData} variant="secondary" disabled={refreshing}>
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Refresh Data
               </Button>
@@ -353,7 +353,7 @@ const Analytics = () => {
             transition={{ delay: 0.6, duration: 0.6 }}
             className="flex justify-center mt-8"
           >
-            <Button variant="hero" size="lg" onClick={exportReport}>
+            <Button variant="default" size="lg" onClick={exportReport}>
               Export Analytics Report
             </Button>
           </motion.div>
