@@ -134,7 +134,7 @@ const Landing = () => {
                 className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
               >
                 <Link to="/upload">
-                  <Button variant="default" size="lg">
+                  <Button variant="hero" size="lg">
                     <Zap className="w-5 h-5" />
                     Start Auditing
                   </Button>
@@ -295,7 +295,7 @@ const Landing = () => {
               Join the community of researchers, developers, and citizens building ethical AI together.
             </p>
             <Link to="/upload">
-              <Button variant="default" size="lg">
+              <Button variant="hero" size="lg">
                 Get Started Now
               </Button>
             </Link>

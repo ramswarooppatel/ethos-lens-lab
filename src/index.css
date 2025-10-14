@@ -8,54 +8,72 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 11% 15%;
-    --foreground: 0 0% 98%;
+    --background: 220 13% 9%;
+    --foreground: 220 13% 91%;
 
-    --card: 210 11% 18%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 13% 12%;
+    --card-foreground: 220 13% 91%;
 
-    --popover: 210 11% 18%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 13% 10%;
+    --popover-foreground: 220 13% 91%;
 
-    --primary: 217 33% 60%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 172 100% 44%;
+    --primary-foreground: 220 13% 9%;
 
-    --secondary: 210 11% 25%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 13% 16%;
+    --secondary-foreground: 220 13% 91%;
 
-    --muted: 210 11% 25%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 220 13% 16%;
+    --muted-foreground: 220 13% 60%;
 
-    --accent: 217 33% 60%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 242 82% 77%;
+    --accent-foreground: 220 13% 9%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 220 13% 91%;
 
-    --border: 210 11% 25%;
-    --input: 210 11% 25%;
-    --ring: 217 33% 60%;
+    --border: 220 13% 20%;
+    --input: 220 13% 16%;
+    --ring: 172 100% 44%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
     
-    --glass-bg: 0 0% 98% / 0.03;
-    --glass-border: 217 33% 60% / 0.2;
-    --glow-primary: 217 33% 60% / 0.3;
+    --glass-bg: 220 13% 91% / 0.04;
+    --glass-border: 172 100% 44% / 0.3;
+    --glow-primary: 172 100% 44% / 0.5;
+    --glow-accent: 242 82% 77% / 0.4;
     
-    --gradient-card: linear-gradient(180deg, hsl(210 11% 18%), hsl(210 11% 15%));
+    --gradient-hero: linear-gradient(135deg, hsl(172 100% 44% / 0.1), hsl(242 82% 77% / 0.1));
+    --gradient-card: linear-gradient(180deg, hsl(220 13% 12%), hsl(220 13% 10%));
     
-    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 40px hsl(var(--glow-primary));
+    --shadow-glass: 0 8px 32px hsl(220 13% 5% / 0.4);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --sidebar-background: 210 11% 18%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 217 33% 60%;
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 11% 25%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 210 11% 25%;
-    --sidebar-ring: 217 33% 60%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 13% 5%;
+    --card: 220 13% 8%;
   }
 }
 
@@ -112,28 +130,38 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  /* Global font stack: prefer Klavika -> Oliver -> Roboto -> Inter -> system */
   body {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans";
+    font-family: 'Klavika', 'Oliver', 'Roboto', 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     @apply bg-background text-foreground antialiased;
   }
 
+  /* Headings use slightly stronger weight and keep the premium stack */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI";
+    font-family: 'Klavika', 'Oliver', 'Roboto', Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI";
     @apply font-semibold tracking-tight;
-  }
-  
-  code, pre {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-border;
+    @apply bg-white/[0.04] backdrop-blur-xl border border-white/10;
   }
   
   .glass-panel-hover {
-    @apply glass-panel transition-all duration-300 hover:border-primary/40;
+    @apply glass-panel transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_hsl(var(--glow-primary))];
+  }
+  
+  .glow-primary {
+    @apply shadow-[0_0_20px_hsl(var(--glow-primary))];
+  }
+  
+  .glow-accent {
+    @apply shadow-[0_0_20px_hsl(var(--glow-accent))];
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
   }
   
   .animate-float {
@@ -143,6 +171,15 @@ All colors MUST be HSL.
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-20px); }
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    from { box-shadow: 0 0 10px hsl(var(--glow-primary)), 0 0 20px hsl(var(--glow-primary)); }
+    to { box-shadow: 0 0 20px hsl(var(--glow-primary)), 0 0 40px hsl(var(--glow-primary)); }
   }
 
   .animation-delay-2000 {

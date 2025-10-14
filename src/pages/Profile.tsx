@@ -161,7 +161,7 @@ const Profile = () => {
               </div>
               {isEditing ? (
                 <div className="flex gap-2">
-                  <Button variant="default" size="sm" onClick={handleSaveProfile}>
+                  <Button variant="hero" size="sm" onClick={handleSaveProfile}>
                     <Save className="w-4 h-4 mr-2" />
                     Save
                   </Button>
@@ -322,7 +322,7 @@ const Profile = () => {
                     />
                   </div>
 
-                  <Button onClick={savePreferences} variant="default" className="w-full mt-4">
+                  <Button onClick={savePreferences} variant="hero" className="w-full mt-4">
                     <Save className="w-4 h-4" />
                     Save Preferences
                   </Button>

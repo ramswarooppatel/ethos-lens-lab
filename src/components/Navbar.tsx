@@ -1,41 +1,12 @@
-import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AnimatePresence, motion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { Scan, Menu, X } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const navRef = useRef<HTMLElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!navRef.current || !containerRef.current) return;
-
-    const ctx = gsap.context(() => {
-      gsap.to(containerRef.current, {
-        scrollTrigger: {
-          trigger: document.body,
-          start: "top top",
-          end: "+=100",
-          scrub: true,
-        },
-        scale: 0.95,
-        borderRadius: "24px",
-        margin: "12px auto",
-        maxWidth: "1200px",
-        padding: "8px 16px",
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-      });
-    }, navRef);
-
-    return () => ctx.revert();
-  }, []);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -47,67 +18,87 @@ const Navbar = () => {
   ];
 
   return (
-    <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div ref={containerRef} className="container mx-auto px-4 py-4 transition-all duration-300">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <Scan className="h-6 w-6 text-primary" />
-            <span className="text-xl font-semibold text-foreground">EthosLens</span>
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="relative">
+              <Scan className="w-8 h-8 text-primary group-hover:text-accent transition-colors duration-300" />
+              <div className="absolute inset-0 blur-lg bg-primary/30 group-hover:bg-accent/30 transition-all duration-300" />
+            </div>
+            <span className="text-xl font-bold tracking-tight">
+              Ethos<span className="text-gradient">Lens</span>
+            </span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-1">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              <Button
-                key={link.path}
-                variant={location.pathname === link.path ? "default" : "ghost"}
-                asChild
-                size="sm"
-              >
-                <Link to={link.path}>{link.name}</Link>
-              </Button>
+              <Link key={link.path} to={link.path}>
+                <Button
+                  variant={location.pathname === link.path ? "glass" : "ghost"}
+                  size="sm"
+                  className={
+                    location.pathname === link.path
+                      ? "border-primary/50"
+                      : ""
+                  }
+                >
+                  {link.name}
+                </Button>
+              </Link>
             ))}
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/profile">Profile</Link>
-            </Button>
           </div>
 
+          {/* Profile Button */}
+          <div className="hidden md:block">
+            <Link to="/profile">
+              <Button variant="outline" size="sm">
+                Profile
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-foreground hover:text-primary transition-colors"
           >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-card border-t border-border"
+            className="md:hidden glass-panel border-t overflow-hidden"
           >
             <div className="container mx-auto px-4 py-4 space-y-2">
               {navLinks.map((link) => (
-                <Button
+                <Link
                   key={link.path}
-                  variant={location.pathname === link.path ? "default" : "ghost"}
-                  asChild
-                  className="w-full justify-start"
+                  to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Link to={link.path}>{link.name}</Link>
-                </Button>
+                  <Button
+                    variant={location.pathname === link.path ? "glass" : "ghost"}
+                    className="w-full justify-start"
+                  >
+                    {link.name}
+                  </Button>
+                </Link>
               ))}
-              <Button
-                variant="outline"
-                asChild
-                className="w-full justify-start"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link to="/profile">Profile</Link>
-              </Button>
+              <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full justify-start">
+                  Profile
+                </Button>
+              </Link>
             </div>
           </motion.div>
         )}
