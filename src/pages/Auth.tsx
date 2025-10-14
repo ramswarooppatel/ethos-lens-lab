@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { gsap } from "gsap";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +14,8 @@ const Auth = () => {
   const cardRef = useRef<HTMLDivElement>(null);
   const signinRef = useRef<HTMLDivElement>(null);
   const signupRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
@@ -20,6 +23,8 @@ const Auth = () => {
 
   const [signinData, setSigninData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({ username: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (cardRef.current) {
@@ -39,16 +44,60 @@ const Auth = () => {
     }
   }, [activeTab]);
 
-  const handleSignin = (e: React.FormEvent) => {
+  const handleSignin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signin logic
-    console.log("Signin:", signinData);
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signinData),
+      });
+      const data = await response.json();
+      console.log("Signin response:", data);
+      if (response.ok) {
+        login(data.access_token);
+        navigate("/dashboard");
+      } else {
+        setError(data.detail || "Login failed");
+      }
+    } catch (err) {
+      console.error("Signin error:", err);
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic
-    console.log("Signup:", signupData);
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signupData),
+      });
+      const data = await response.json();
+      console.log("Signup response:", data);
+      if (response.ok) {
+        setSearchParams({ tab: "signin" });
+        setError("Registration successful! Please sign in.");
+      } else {
+        setError(data.detail || "Registration failed");
+      }
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,6 +110,7 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -90,8 +140,8 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Sign In
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
@@ -130,8 +180,8 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Sign Up
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing Up..." : "Sign Up"}
                 </Button>
               </form>
             </TabsContent>

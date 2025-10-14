@@ -7,11 +7,13 @@ import {
   DrawerContent,
   DrawerHeader,
 } from "@/components/ui/drawer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,11 +71,17 @@ const Navbar = () => {
 
           {/* Profile Button */}
           <div className="hidden md:block">
-            <Link to="/profile">
-              <Button variant="outline" size="sm">
-                Profile
+            {isAuthenticated ? (
+              <Button variant="outline" size="sm" onClick={logout}>
+                Logout
               </Button>
-            </Link>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -113,11 +121,17 @@ const Navbar = () => {
                       </Button>
                     </Link>
                   ))}
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full justify-start">
-                      Profile
+                  {isAuthenticated ? (
+                    <Button variant="outline" className="w-full justify-start" onClick={() => { logout(); setMobileMenuOpen(false); }}>
+                      Logout
                     </Button>
-                  </Link>
+                  ) : (
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full justify-start">
+                        Login
+                      </Button>
+                    </Link>
+                  )}
                 </div>
                 <div className="px-4 py-4 border-t">
                   <p className="text-sm text-muted-foreground text-center">
