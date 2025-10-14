@@ -12,6 +12,7 @@ import Reports from "./pages/Reports";
 import Community from "./pages/Community";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/reports" element={<Reports />} />
