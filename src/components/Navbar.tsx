@@ -27,11 +27,14 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Upload", path: "/upload" },
-    { name: "Arena", path: "/arena" },
     { name: "Dashboard", path: "/dashboard" },
     { name: "Reports", path: "/reports" },
     { name: "Community", path: "/community" },
     { name: "Analytics", path: "/analytics" },
+    { name: "Arena", path: "/arena" },
+    { name: "Public Hub", path: "/hub" },
+    { name: "Learn", path: "/learn" },
+    { name: "Case Studies", path: "/case-studies" },
   ];
 
   return (
