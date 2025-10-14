@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { addModel, addDataset, addReport, incrementStat } from "@/lib/localStorage";
 import { generateMockModel, generateMockDataset, generateMockReport } from "@/lib/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { datasetAPI } from "@/lib/api";
+import { Dataset } from "@/lib/localStorage";
 
 const Upload = () => {
   const [uploading, setUploading] = useState(false);
@@ -27,14 +30,13 @@ const Upload = () => {
   const [datasetDescription, setDatasetDescription] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { token } = useAuth();
 
-  const handleUpload = (type: "model" | "dataset") => {
+  const handleUpload = async (type: "model" | "dataset") => {
     setUploading(true);
     setUploadComplete(false);
 
-    // Simulate upload process
-    setTimeout(() => {
-      if (type === 'model') {
+    if (type === 'model') {
         // Handle single file
         if (selectedFile) {
           const model = generateMockModel();
@@ -79,34 +81,60 @@ const Upload = () => {
       } else {
         // Handle single dataset
         if (selectedFile) {
-          const dataset = generateMockDataset();
-          dataset.name = datasetName || dataset.name;
-          dataset.tags = datasetTags ? datasetTags.split(',').map(t => t.trim()) : dataset.tags;
-          dataset.description = datasetDescription || dataset.description;
-          
-          addDataset(dataset);
+          try {
+            const response = await datasetAPI.upload(selectedFile);
+            const dataset: Dataset = {
+              id: response.id.toString(),
+              name: datasetName || response.name,
+              type: response.file_type,
+              tags: datasetTags ? datasetTags.split(',').map(t => t.trim()) : [],
+              description: datasetDescription || 'Uploaded dataset',
+              uploadDate: new Date().toISOString(),
+              sampleCount: response.row_count,
+            };
+            addDataset(dataset);
+            
+            toast({
+              title: "Upload Successful",
+              description: `Dataset "${dataset.name}" has been uploaded successfully.`,
+            });
+          } catch (error) {
+            console.error('Dataset upload failed:', error);
+            toast({
+              title: "Upload Failed",
+              description: `Failed to upload dataset: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              variant: "destructive",
+            });
+          }
         }
 
         // Handle batch datasets
-        batchFiles.forEach((file, index) => {
-          setTimeout(() => {
-            const dataset = generateMockDataset();
-            dataset.name = `${file.name.split('.')[0]} Dataset`;
-            dataset.tags = ['batch-upload', 'auto-generated'];
-            dataset.description = `Batch uploaded dataset from ${file.name}`;
-            
+        for (const file of batchFiles) {
+          try {
+            const response = await datasetAPI.upload(file);
+            const dataset: Dataset = {
+              id: response.id.toString(),
+              name: `${file.name.split('.')[0]} Dataset`,
+              type: response.file_type,
+              tags: ['batch-upload', 'auto-generated'],
+              description: `Batch uploaded dataset from ${file.name}`,
+              uploadDate: new Date().toISOString(),
+              sampleCount: response.row_count,
+            };
             addDataset(dataset);
-          }, index * 500);
-        });
+          } catch (error) {
+            console.error(`Failed to upload ${file.name}:`, error);
+            toast({
+              title: "Batch Upload Error",
+              description: `Failed to upload ${file.name}. Continuing with other files.`,
+              variant: "destructive",
+            });
+          }
+        }
 
         setUploading(false);
         setUploadComplete(true);
         
-        toast({
-          title: "Upload Successful",
-          description: `Your dataset${batchFiles.length > 0 ? 's' : ''} have been uploaded and are ready for analysis.`,
-        });
-
         setTimeout(() => setUploadComplete(false), 3000);
       }
 
@@ -114,7 +142,6 @@ const Upload = () => {
       setBatchFiles([]);
       setSelectedFile(null);
       setMetadataPreview(null);
-    }, 2000);
   };
 
   const loadDemoModel = () => {

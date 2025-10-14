@@ -12,7 +12,15 @@ const Footer = () => {
             </span>
           </div>
           <div className="text-sm text-muted-foreground">
-            © 2025 EthosLens. Ethical AI for everyone.
+            <p>© 2025 EthosLens. Ethical AI for everyone.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse row-span-2"></div>
+                <span className="text-sm">Building the future, one line of code at a time</span>
+              </div>
+                              <a href="/developers" className="text-sm text-primary hover:underline">Meet the Developers</a>
+
+            </div>
           </div>
         </div>
       </div>

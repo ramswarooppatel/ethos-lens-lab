@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { gsap } from "gsap";
 import { useAuth } from "@/contexts/AuthContext";
+import { authAPI } from "@/lib/api";
 
 const Auth = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,20 +50,13 @@ const Auth = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signinData),
-      });
-      const data = await response.json();
+      const data = await authAPI.login(signinData);
       console.log("Signin response:", data);
-      if (response.ok) {
+      if (data.access_token) {
         login(data.access_token);
         navigate("/dashboard");
       } else {
-        setError(data.detail || "Login failed");
+        setError("Login failed");
       }
     } catch (err) {
       console.error("Signin error:", err);
@@ -77,16 +71,9 @@ const Auth = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signupData),
-      });
-      const data = await response.json();
+      const data = await authAPI.register(signupData);
       console.log("Signup response:", data);
-      if (response.ok) {
+      if (data.message) {
         setSearchParams({ tab: "signin" });
         setError("Registration successful! Please sign in.");
       } else {

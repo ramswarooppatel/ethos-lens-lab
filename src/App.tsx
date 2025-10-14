@@ -13,6 +13,8 @@ import Community from "./pages/Community";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import Developers from "./pages/Developers";
+import JailbreakArena from "./pages/JailbreakArena";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -35,6 +37,8 @@ const App = () => (
                 <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                <Route path="/developers" element={<Developers/>} />
+                <Route path="/arena" element={<ProtectedRoute><JailbreakArena/></ProtectedRoute>} />
                 <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
