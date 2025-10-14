@@ -2,8 +2,9 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Home, Search, AlertTriangle } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 const NotFound = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4 lg:px-8">
@@ -61,7 +62,7 @@ const NotFound = () => {
             className="mt-12 max-w-4xl mx-auto"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="glass-panel p-6 rounded-xl text-center">
+              <button onClick={() => navigate("/")} className="glass-panel p-6 rounded-xl text-center">
                 <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Home className="w-6 h-6 text-primary" />
                 </div>
@@ -69,9 +70,9 @@ const NotFound = () => {
                 <p className="text-sm text-muted-foreground">
                   Return to the main landing page
                 </p>
-              </div>
+              </button>
 
-              <div className="glass-panel p-6 rounded-xl text-center">
+              <button onClick={() => navigate("/dashboard")} className="glass-panel p-6 rounded-xl text-center">
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="w-6 h-6 text-accent" />
                 </div>
@@ -79,9 +80,9 @@ const NotFound = () => {
                 <p className="text-sm text-muted-foreground">
                   Access your analysis dashboard
                 </p>
-              </div>
+              </button>
 
-              <div className="glass-panel p-6 rounded-xl text-center">
+              <button onClick={() => navigate("/arena")} className="glass-panel p-6 rounded-xl text-center">
                 <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Home className="w-6 h-6 text-green-400" />
                 </div>
@@ -89,7 +90,7 @@ const NotFound = () => {
                 <p className="text-sm text-muted-foreground">
                   Test AI models in the jailbreak arena
                 </p>
-              </div>
+              </button>
             </div>
           </motion.div>
         </motion.div>
