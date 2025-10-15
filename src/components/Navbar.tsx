@@ -27,11 +27,13 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Upload", path: "/upload" },
-    { name: "Dashboard", path: "/dashboard" },
+    // { name: "Analysis", path: "/analysis" },
+    // { name: "Dashboard", path: "/dashboard" },
     { name: "Reports", path: "/reports" },
     { name: "Community", path: "/community" },
     { name: "Analytics", path: "/analytics" },
     { name: "Arena", path: "/arena" },
+    { name: "LLM Competitor", path: "/competitor" },
     { name: "Public Hub", path: "/hub" },
   ];
 

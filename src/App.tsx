@@ -17,9 +17,10 @@ import PublicHub from "./pages/PublicHub";
 import Developers from "./pages/Developers";
 import JailbreakArena from "./pages/JailbreakArena";
 import LearningHub from "./pages/LearningHub";
-import CaseStudies from "./pages/CaseStudies";
-import NotFound from "./pages/NotFound";
+import DatasetAnalysis from "./pages/DatasetAnalysis";
+import LLMCompetitor from "./pages/LLMCompetitor";
 import { AuthProvider } from "./contexts/AuthContext";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -47,7 +48,8 @@ const App = () => (
                 <Route path="/arena" element={<ProtectedRoute><JailbreakArena /></ProtectedRoute>} />
                 <Route path="/hub" element={<PublicHub />} />
                 <Route path="/learn" element={<LearningHub />} />
-                <Route path="/case-studies" element={<CaseStudies />} />
+                <Route path="/analysis" element={<ProtectedRoute><DatasetAnalysis /></ProtectedRoute>} />
+                <Route path="/competitor" element={<ProtectedRoute><LLMCompetitor /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
