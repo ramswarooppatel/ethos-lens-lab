@@ -16,6 +16,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { datasetAPI } from "@/lib/api";
 import { Dataset } from "@/lib/localStorage";
 import LLMComparator from "@/components/llm_evaluation";
+import ModelReport from "@/components/ModelReport";  // Add this import
+
+// Inline placeholder for ModeEvaluation when the external module is missing.
+// Replace this with the real "@/components/mode_evaluation" component implementation.
+const ModeEvaluation = ({ formData }: { formData: any }) => {
+  return (
+    <div className="glass-panel p-8 rounded-2xl space-y-4">
+      <h3 className="text-xl font-semibold">Mode Evaluation (Placeholder)</h3>
+      <p className="text-muted-foreground">
+        The external component "@/components/mode_evaluation" could not be found; this inline placeholder preserves functionality until the real component is added.
+      </p>
+      <pre className="text-sm bg-muted/40 p-3 rounded overflow-auto">
+        {JSON.stringify(formData, null, 2)}
+      </pre>
+    </div>
+  );
+};
 
 // ... existing interfaces remain the same ...
 
@@ -805,6 +822,56 @@ const Upload = () => {
     }
   };
 
+  // Add new state for model evaluation form
+  const [evaluationMode, setEvaluationMode] = useState<'api' | 'pkl'>('api');
+  const [apiInfo, setApiInfo] = useState('');
+  const [pklFile, setPklFile] = useState<File | null>(null);
+  const [trainingDataset, setTrainingDataset] = useState<File | null>(null);
+  const [testingDataset, setTestingDataset] = useState<File | null>(null);
+  const [evaluationPrompt, setEvaluationPrompt] = useState('');
+  const [showModeEvaluation, setShowModeEvaluation] = useState(false);
+
+  // Add new function to handle form submission for model evaluation
+  const handleModelEvaluationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Basic validation
+    if (evaluationMode === 'api' && !apiInfo.trim()) {
+      toast({
+        title: "Missing API Info",
+        description: "Please provide API details for your model.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (evaluationMode === 'pkl' && !pklFile) {
+      toast({
+        title: "Missing PKL File",
+        description: "Please upload your .pkl model file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!trainingDataset || !testingDataset || !evaluationPrompt.trim()) {
+      toast({
+        title: "Incomplete Form",
+        description: "Please provide training dataset, testing dataset, and a prompt.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Prepare form data for ModeEvaluation
+    const formData = {
+      mode: evaluationMode,
+      apiInfo: evaluationMode === 'api' ? apiInfo : null,
+      pklFile: evaluationMode === 'pkl' ? pklFile : null,
+      trainingDataset,
+      testingDataset,
+      prompt: evaluationPrompt,
+    };
+    setShowModeEvaluation(true);  // Keep this, but now it will render ModelReport
+    // Optionally, you can pass formData to ModeEvaluation via props or context
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
@@ -839,327 +906,212 @@ const Upload = () => {
             </TabsList>
 
             <TabsContent value="model" className="mt-6">
-              <div className="glass-panel p-8 rounded-2xl space-y-6">
-                {/* Drag and Drop Area */}
-                <div className="relative group">
-                  <div className="glass-panel-hover p-12 rounded-2xl border-2 border-dashed border-foreground/20 hover:border-primary/50 transition-all duration-300 text-center cursor-pointer">
-                    {uploadComplete ? (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="flex flex-col items-center"
-                      >
-                        <CheckCircle2 className="w-16 h-16 text-primary mb-4" />
-                        <p className="text-lg font-medium">Upload Complete!</p>
-                      </motion.div>
-                    ) : uploading ? (
-                      <div className="flex flex-col items-center">
-                        <Loader2 className="w-16 h-16 text-primary animate-spin mb-4" />
-                        <p className="text-lg font-medium">Analyzing metadata...</p>
-                      </div>
-                    ) : (
-                      <>
-                        <UploadIcon className="w-16 h-16 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
-                        <p className="text-lg font-medium mb-2">Drop your model file here</p>
-                        <p className="text-sm text-muted-foreground">or click to browse</p>
-                        <input
-                          type="file"
-                          title="Choose model file"
-                          aria-label="Choose model file"
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          accept=".h5,.pkl,.pt,.onnx"
-                          onChange={(e) => handleFileChange(e.target.files)}
-                        />
-                      </>
-                    )}
-                  </div>
-                  {/* Show selected file name below the dropzone */}
-                  {selectedFile && (
-                    <div className="mt-4 flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-4 py-2 rounded-full max-w-md mx-auto">
-                      <div className="flex items-center gap-3">
-                        <FileCode className="w-4 h-4 text-primary" />
-                        <div className="text-sm text-foreground max-w-[220px] truncate">{selectedFile.name}</div>
-                      </div>
-                      <button type="button" onClick={clearSelectedFile} className="text-muted-foreground hover:text-foreground flex items-center gap-2">
-                        <X className="w-4 h-4" />
-                        <span className="sr-only">Clear selected file</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Metadata Preview */}
-                {analyzingMetadata && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-panel p-4 rounded-xl"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      <span className="text-sm">Analyzing file metadata...</span>
-                    </div>
-                  </motion.div>
-                )}
-
-                {metadataPreview && !analyzingMetadata && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-panel p-4 rounded-xl"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Eye className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">File Analysis</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Size:</span>
-                        <span className="ml-2">{(metadataPreview.size / 1024 / 1024).toFixed(2)} MB</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Type:</span>
-                        <span className="ml-2">{metadataPreview.type}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Modified:</span>
-                        <span className="ml-2">{metadataPreview.lastModified}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Features:</span>
-                        <span className="ml-2">{metadataPreview.features?.join(', ')}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Batch Upload Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Batch Upload (Optional)</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => document.getElementById('batch-model-input')?.click()}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Files
-                    </Button>
-                    <input
-                      id="batch-model-input"
-                      type="file"
-                      multiple
-                      title="Select multiple model files"
-                      aria-label="Batch model file selection"
-                      className="hidden"
-                      accept=".h5,.pkl,.pt,.onnx"
-                      onChange={(e) => handleBatchFiles(e.target.files!)}
-                    />
-                  </div>
-
-                  {batchFiles.length > 0 && (
-                    <div className="space-y-2">
-                      {batchFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-3 py-2 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <FileCode className="w-4 h-4 text-primary" />
-                            <span className="text-sm truncate max-w-[200px]">{file.name}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeBatchFile(index)}
-                            aria-label={`Remove ${file.name} from batch`}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Demo Buttons */}
-                <div className="flex gap-3">
-                  <Button 
-                    onClick={loadDemoModel}
-                    variant="outline" 
-                    className="flex-1"
-                    type="button"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Load Demo Data
-                  </Button>
-                  <Button 
-                    onClick={insertSampleModel}
-                    variant="secondary" 
-                    className="flex-1"
-                    type="button"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Insert Sample Model
-                  </Button>
-                </div>
-
-                {/* Form Fields */}
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="model-name">Model Name</Label>
-                    <Input
-                      id="model-name"
-                      placeholder="e.g., ResNet-50 Classifier"
-                      className="glass-panel border-foreground/20"
-                      value={modelName}
-                      onChange={(e) => setModelName(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="model-tags">Tags</Label>
-                    <Input
-                      id="model-tags"
-                      placeholder="e.g., computer-vision, classification"
-                      className="glass-panel border-foreground/20"
-                      value={modelTags}
-                      onChange={(e) => setModelTags(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="model-description">Description</Label>
-                    <Textarea
-                      id="model-description"
-                      placeholder="Describe your model's purpose and training data..."
-                      className="glass-panel border-foreground/20 min-h-[120px]"
-                      value={modelDescription}
-                      onChange={(e) => setModelDescription(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="model-api-info">API Information</Label>
-                    <Textarea
-                      id="model-api-info"
-                      placeholder="Describe your model's API setup (e.g., 'OpenAI API key: sk-1234567890abcdef, model: gpt-4' or 'Custom endpoint: https://my-api.com/v1 with bearer token...')"
-                      className="glass-panel border-foreground/20 min-h-[80px]"
-                      value={modelApiInfo}
-                      onChange={(e) => setModelApiInfo(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter API details in natural language or technical format
+              {showModeEvaluation ? (
+                <ModelReport 
+                  formData={{
+                    mode: evaluationMode,
+                    apiInfo: evaluationMode === 'api' ? apiInfo : null,
+                    pklFile: evaluationMode === 'pkl' ? pklFile : null,
+                    trainingDataset,
+                    testingDataset,
+                    prompt: evaluationPrompt,
+                  }} 
+                  onBack={() => setShowModeEvaluation(false)}  // Allow going back
+                />
+              ) : (
+                <div className="glass-panel p-8 rounded-2xl space-y-6">
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-semibold">Model Evaluation</h3>
+                    <p className="text-muted-foreground">
+                      Evaluate your model by providing either API details or a .pkl file, along with training/testing datasets and a prompt.
                     </p>
                   </div>
 
-                  <div>
-                    <Label htmlFor="model-api-docs">API Documentation</Label>
-                    <Textarea
-                      id="model-api-docs"
-                      placeholder="Paste or describe your API documentation, endpoints, parameters, and usage examples..."
-                      className="glass-panel border-foreground/20 min-h-[100px]"
-                      value={modelApiDocs}
-                      onChange={(e) => setModelApiDocs(e.target.value)}
-                    />
+                  {/* Mode Selection */}
+                  <div className="space-y-4">
+                    <Label className="text-base font-medium">Evaluation Mode</Label>
+                    <div className="flex gap-4">
+                      <Button
+                        type="button"
+                        variant={evaluationMode === 'api' ? 'default' : 'outline'}
+                        onClick={() => setEvaluationMode('api')}
+                        className="flex-1"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        API-Based Model
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={evaluationMode === 'pkl' ? 'default' : 'outline'}
+                        onClick={() => setEvaluationMode('pkl')}
+                        className="flex-1"
+                      >
+                        <FileCode className="w-4 h-4 mr-2" />
+                        PKL File Model
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Advanced Analysis Dropdown */}
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="advanced-analysis"
-                        checked={advancedAnalysis}
-                        onChange={(e) => setAdvancedAnalysis(e.target.checked)}
-                        className="rounded border-foreground/20"
-                        aria-label="Enable advanced analysis with ANN"
-                      />
-                      <Label htmlFor="advanced-analysis" className="text-sm font-medium">
-                        Enable Advanced Analysis (ANN - Artificial Neural Network)
-                      </Label>
-                    </div>
-
-                    {advancedAnalysis && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-4 p-4 glass-panel rounded-xl border-accent/20"
-                      >
-                        <div className="text-sm text-muted-foreground mb-3">
-                          Upload a dataset for ANN-based bias detection and ethical analysis
-                        </div>
-
-                        {/* ANN Dataset Upload */}
+                  <form onSubmit={handleModelEvaluationSubmit} className="space-y-6">
+                    {/* Conditional Fields Based on Mode */}
+                    {evaluationMode === 'api' ? (
+                      <div>
+                        <Label htmlFor="api-info">API Information *</Label>
+                        <Textarea
+                          id="api-info"
+                          placeholder="Describe your model's API setup (e.g., endpoint URL, authentication, request format). Example: 'OpenAI API key: sk-1234567890abcdef, model: gpt-4, endpoint: https://api.openai.com/v1/chat/completions'"
+                          className="glass-panel border-foreground/20 min-h-[100px]"
+                          value={apiInfo}
+                          onChange={(e) => setApiInfo(e.target.value)}
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <Label htmlFor="pkl-file">Upload PKL Model File *</Label>
                         <div className="relative group">
                           <div className="glass-panel-hover p-8 rounded-xl border-2 border-dashed border-foreground/20 hover:border-primary/50 transition-all duration-300 text-center cursor-pointer">
-                            <Database className="w-12 h-12 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
-                            <p className="text-sm font-medium mb-1">Drop ANN dataset here</p>
+                            <FileCode className="w-12 h-12 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
+                            <p className="text-sm font-medium mb-1">Drop your .pkl file here</p>
                             <p className="text-xs text-muted-foreground">or click to browse</p>
                             <input
+                              id="pkl-file"
                               type="file"
-                              title="Choose ANN dataset file"
-                              aria-label="Choose ANN dataset file"
+                              accept=".pkl"
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                              accept=".csv,.json,.parquet"
                               onChange={(e) => {
                                 if (e.target.files && e.target.files[0]) {
-                                  setAnnDataset(e.target.files[0]);
+                                  setPklFile(e.target.files[0]);
                                 }
                               }}
+                              required
                             />
                           </div>
                         </div>
-
-                        {/* Show selected ANN dataset */}
-                        {annDataset && (
-                          <div className="flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-foreground/10 px-3 py-2 rounded-lg">
+                        {pklFile && (
+                          <div className="mt-2 flex items-center justify-between bg-muted/50 border border-border px-3 py-2 rounded-lg">
                             <div className="flex items-center gap-2">
-                              <Database className="w-4 h-4 text-primary" />
-                              <span className="text-sm">{annDataset.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                ({(annDataset.size / 1024 / 1024).toFixed(2)} MB)
-                              </span>
+                              <FileCode className="w-4 h-4 text-primary" />
+                              <span className="text-sm">{pklFile.name}</span>
                             </div>
                             <button
                               type="button"
-                              onClick={() => setAnnDataset(null)}
+                              onClick={() => setPklFile(null)}
                               className="text-muted-foreground hover:text-destructive"
-                              aria-label="Remove ANN dataset"
-                              title="Remove ANN dataset"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         )}
-
-                        <div className="text-xs text-muted-foreground">
-                          This dataset will be used for advanced neural network analysis of your model's ethical implications and bias detection.
-                        </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </div>
-                </div>
 
-                <Button
-                  onClick={() => handleUpload("model")}
-                  disabled={uploading}
-                  variant="hero"
-                  className="w-full"
-                  size="lg"
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowRight className="w-4 h-4" />
-                      Submit Model & Analyze
-                    </>
-                  )}
-                </Button>
-              </div>
+                    {/* Common Fields: Training Dataset */}
+                    <div>
+                      <Label htmlFor="training-dataset">Training Dataset *</Label>
+                      <div className="relative group">
+                        <div className="glass-panel-hover p-6 rounded-xl border-2 border-dashed border-foreground/20 hover:border-primary/50 transition-all duration-300 text-center cursor-pointer">
+                          <Database className="w-10 h-10 text-primary mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+                          <p className="text-sm font-medium mb-1">Drop training dataset here</p>
+                          <p className="text-xs text-muted-foreground">Supports CSV, JSON, Parquet files</p>
+                          <input
+                            id="training-dataset"
+                            type="file"
+                            accept=".csv,.json,.parquet,.xlsx"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setTrainingDataset(e.target.files[0]);
+                              }
+                            }}
+                            required
+                          />
+                        </div>
+                      </div>
+                      {trainingDataset && (
+                        <div className="mt-2 flex items-center justify-between bg-muted/50 border border-border px-3 py-2 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Database className="w-4 h-4 text-primary" />
+                            <span className="text-sm">{trainingDataset.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setTrainingDataset(null)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Common Fields: Testing Dataset */}
+                    <div>
+                      <Label htmlFor="testing-dataset">Testing Dataset *</Label>
+                      <div className="relative group">
+                        <div className="glass-panel-hover p-6 rounded-xl border-2 border-dashed border-foreground/20 hover:border-primary/50 transition-all duration-300 text-center cursor-pointer">
+                          <Database className="w-10 h-10 text-primary mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+                          <p className="text-sm font-medium mb-1">Drop testing dataset here</p>
+                          <p className="text-xs text-muted-foreground">Supports CSV, JSON, Parquet files</p>
+                          <input
+                            id="testing-dataset"
+                            type="file"
+                            accept=".csv,.json,.parquet,.xlsx"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setTestingDataset(e.target.files[0]);
+                              }
+                            }}
+                            required
+                          />
+                        </div>
+                      </div>
+                      {testingDataset && (
+                        <div className="mt-2 flex items-center justify-between bg-muted/50 border border-border px-3 py-2 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Database className="w-4 h-4 text-primary" />
+                            <span className="text-sm">{testingDataset.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setTestingDataset(null)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Common Fields: Prompt */}
+                    <div>
+                      <Label htmlFor="evaluation-prompt">Evaluation Prompt *</Label>
+                      <Textarea
+                        id="evaluation-prompt"
+                        placeholder="Describe what you are trying to achieve with this model. For example: 'Predict patient readmission risk based on demographic and medical history data' or 'Classify images of skin lesions for early cancer detection.'"
+                        className="glass-panel border-foreground/20 min-h-[120px]"
+                        value={evaluationPrompt}
+                        onChange={(e) => setEvaluationPrompt(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Be specific about your model's purpose and intended use case.
+                      </p>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      variant="hero"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Start Model Evaluation
+                    </Button>
+                  </form>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="dataset" className="mt-6">
